@@ -9,7 +9,7 @@ The document describes `Armat.Localization.Core` .Net library usage - providing 
 Note: This is the core module of `Armat.Localization` library. It can be used for localizing strings for all types of .Net applications.
 Below are derived libraries for specialized application types:
 
-- Armat.Localization.Wpf can be used for localizing Wpf Resource Dictionaries. See [here](https://github.com/ar-mat/toolset/tree/main/Localization/Localization.Wpf) for more information.
+- Armat.Localization.Wpf can be used for localizing Wpf Resource Dictionaries. See [here](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Wpf) for more information.
 
 
 ## Main components
@@ -87,7 +87,7 @@ There are more `LocalizableStringDictionary` APIs used internally. Description f
 ## General Usage Pattern
 
 The usage pattern will be demonstrated on a sample of Wpf application.
-It's available through [Armat Localization Demo](https://github.com/ar-mat/toolset/tree/main/Localization/Demo) GitHub link.
+It's available through [Armat Localization Demo](https://github.com/ar-mat/Localization/tree/main/Projects/Demo) GitHub link.
 
 ### Create LocalizationManager
 
@@ -108,6 +108,6 @@ It's available through [Armat Localization Demo](https://github.com/ar-mat/tools
 
 ### Use Localization.Designer
 
-- Localization Designer source code is available [here](https://github.com/ar-mat/toolset/tree/main/Localization/Localization.Designer).
+- Localization Designer source code is available [here](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Designer).
 - Instead of manually creating translation files for each language, Localization Designer can be used to easily load & translate localizable files. It will create corresponding translation files in appropriate directories.
 - Set "Copy to output directory" of generated translation files to "Copy if newer" in Visual Studio. Those will appear in the appropriate Localization subfolders in the bin directory.

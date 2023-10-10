@@ -20,7 +20,7 @@
 
 		<PackageVersion>$(Version)$(_NugetVersionPostfix)</PackageVersion>
 		<PackageProjectUrl>$(_ProjectWebpageUrl)</PackageProjectUrl>
-		<RepositoryUrl>$(_SourceCoreRepositoryRootUrl)/Projects/Localization/Localization.Core</RepositoryUrl>
+		<RepositoryUrl>$(_SourceCoreRepositoryRootUrl)/Projects/Localization.Core</RepositoryUrl>
 		<RepositoryType>$(_SourceCoreRepositoryType)</RepositoryType>
 		<PackageLicenseExpression>$(_ProjectLicenseType)</PackageLicenseExpression>
 

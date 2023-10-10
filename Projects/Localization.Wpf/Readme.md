@@ -1,7 +1,7 @@
 ﻿# Armat Localization Wpf
 
 The document describes `Armat Localization Wpf` .Net library. Being an extension of `Armat Localization Core`, it provides APIs for localizing Wpf applications.
-See more details in https://github.com/ar-mat/toolset/tree/main/Localization/Localization.Core.
+See more details in https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Core.
 
 ## `LocalizableResourceDictionary` class
 
@@ -35,7 +35,7 @@ There are more `LocalizableResourceDictionary` APIs used internally. Description
 ## General Usage Pattern
 
 The usage pattern will be demonstrated on a sample of Wpf application.
-It's available through [Armat Localization Demo](https://github.com/ar-mat/toolset/tree/main/Localization/Demo) GitHub link.
+It's available through [Armat Localization Demo](https://github.com/ar-mat/Localization/tree/main/Projects/Demo) GitHub link.
 
 ### Create LocalizationManager
 
@@ -53,6 +53,6 @@ It's available through [Armat Localization Demo](https://github.com/ar-mat/tools
 
 ### Use Localization.Designer
 
-- Localization Designer source code is available [here](https://github.com/ar-mat/toolset/tree/main/Localization/Localization.Designer).
+- Localization Designer source code is available [here](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Designer).
 - Instead of manually creating translation files for each language, Localization Designer can be used to easily load & translate localizable files. It will create corresponding translation files in appropriate directories.
 - Set "Copy to output directory" of generated translation files to "Copy if newer" in Visual Studio. Those will appear in the appropriate Localization subfolders in the bin directory.

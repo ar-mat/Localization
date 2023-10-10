@@ -6,7 +6,7 @@
 		<Product>Armat Localization</Product>
 		<Authors>Ara Petrosyan</Authors>
 
-		<Version>1.2.0</Version>
+		<Version>1.2.1</Version>
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<FileVersion>$(Version).0</FileVersion>
 		<!--<_NugetVersionPostfix>-beta</_NugetVersionPostfix>-->
@@ -25,7 +25,7 @@
 
 		<_ProjectWebpageUrl>http://armat.am/products/localization</_ProjectWebpageUrl>
 		<_ProjectLicenseType>MIT</_ProjectLicenseType>
-		<_SourceCoreRepositoryRootUrl>https://github.com/ar-mat/Loclization/tree/main</_SourceCoreRepositoryRootUrl>
+		<_SourceCoreRepositoryRootUrl>https://github.com/ar-mat/Localization/tree/main</_SourceCoreRepositoryRootUrl>
 		<_SourceCoreRepositoryType>git</_SourceCoreRepositoryType>
 
 	</PropertyGroup>
