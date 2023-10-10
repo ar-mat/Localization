@@ -1,0 +1,16 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <s:String x:Key="Toolbar_RemoveSelected">Հեռացնել նշվածները</s:String>
+    <s:String x:Key="Toolbar_ScanDirectory">Սկանավորել պանակը</s:String>
+    <s:String x:Key="Toolbar_AddFiles">Ավելացնել ֆայլ(եր)</s:String>
+    <s:String x:Key="Lable_LocalizableFiles">Տեղայնացվող ֆայլեր</s:String>
+    <s:String x:Key="TableTrans_ResourceFileIdColumnHeader">Ռեսուրս ֆայլի ՆՀ</s:String>
+    <s:String x:Key="TableFiles_FileDirColumnHeader">Պանակի հասցեն</s:String>
+    <s:String x:Key="Toolbar_SaveAll">Պահպանել բոլորը</s:String>
+    <s:String x:Key="TableTrans_ResourceKeyColumnHeader">Ռեսուրսի բանալին</s:String>
+    <s:String x:Key="TableFiles_FileTypeColumnHeader">Տիպը</s:String>
+    <s:String x:Key="Toolbar_ClearFiles">Մաքրել ֆայլերը</s:String>
+    <s:String x:Key="TableTrans_NativeValueColumnHeader">Նախնական արժեքը</s:String>
+    <s:String x:Key="TableTrans_FileNameColumnHeader">Ֆայլի անունը</s:String>
+    <s:String x:Key="TableFiles_FileNameColumnHeader">Ֆայլի անունը</s:String>
+    <s:String x:Key="Lable_Translations">Թարգմանություններ</s:String>
+</ResourceDictionary>

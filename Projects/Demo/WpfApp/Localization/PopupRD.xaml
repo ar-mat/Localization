@@ -1,0 +1,9 @@
+﻿<l:LocalizableResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+								 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+								 xmlns:s="clr-namespace:System;assembly=netstandard"
+								 xmlns:l="clr-namespace:Armat.Localization.Wpf;assembly=armat.localization.wpf">
+
+	<s:String x:Key="Window_Title">Popup Window</s:String>
+	<s:String x:Key="Lbl_InCenter">Some Label in the center</s:String>
+
+</l:LocalizableResourceDictionary>

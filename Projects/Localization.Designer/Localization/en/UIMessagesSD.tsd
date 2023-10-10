@@ -1,0 +1,9 @@
+﻿<LocalizableStringDictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <String Key="MessageBox_Caption_Info" Value="Information" />
+    <String Key="MessageBox_Caption_Warning" Value="Warning" />
+    <String Key="MessageBox_Caption_Error" Value="Error" />
+    <String Key="UIMessage_SelectLanguage" Value="Please select a language to add translation." />
+    <String Key="UIMessage_DeleteTransFor_Lang" Value="Are you sure you want to delete all translations for language '{0}'?&#xD;&#xA;Note: It will be permanently deleted from all loaded localizable files." />
+    <String Key="LanguageSelector_NoSelection" Value="[Select language]" />
+    <String Key="OpenFileSelector_FilterLabel" Value="All Localization Files" />
+</LocalizableStringDictionary>

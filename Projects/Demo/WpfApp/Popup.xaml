@@ -1,0 +1,27 @@
+﻿<Window x:Class="Armat.Localization.Demo.Popup"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:lw="clr-namespace:Armat.Localization.Wpf;assembly=armat.localization.wpf"
+        xmlns:local="clr-namespace:Armat.Localization.Demo"
+        mc:Ignorable="d"
+        Title="{DynamicResource Window_Title}" Height="450" Width="800">
+
+	<Window.Resources>
+
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+
+				<lw:LocalizableResourceDictionary Source="/Armat.Localization.Demo.Wpf;component/Localization/PopupRD.xaml"/>
+
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+
+	</Window.Resources>
+	
+	<Grid>
+		<Label Content="{DynamicResource Lbl_InCenter}"
+			   HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+	</Grid>
+</Window>

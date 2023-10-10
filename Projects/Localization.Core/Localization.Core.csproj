@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import common definitions -->
+	<Import Project="../Localization.Import.csproj" />
+
+	<PropertyGroup>
+
+		<RootNamespace>Armat.Localization</RootNamespace>
+		<AssemblyName>armat.localization.core</AssemblyName>
+
+		<OutputType>Library</OutputType>
+		<TargetFramework>$(_DotNetVersion)</TargetFramework>
+
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<Title>Armat Localization Core Module</Title>
+		<Description>C# class library for developing localizable applications. Armat.Localization.Core module contains basic functionality for localizing .net applications.</Description>
+		<PackageIcon>AppIcon.png</PackageIcon>
+		<PackageTags>Localization Translation MultiLingual Language Culture Text</PackageTags>
+		<PackageReadmeFile>Readme.md</PackageReadmeFile>
+
+		<PackageVersion>$(Version)$(_NugetVersionPostfix)</PackageVersion>
+		<PackageProjectUrl>$(_ProjectWebpageUrl)</PackageProjectUrl>
+		<RepositoryUrl>$(_SourceCoreRepositoryRootUrl)/Projects/Localization/Localization.Core</RepositoryUrl>
+		<RepositoryType>$(_SourceCoreRepositoryType)</RepositoryType>
+		<PackageLicenseExpression>$(_ProjectLicenseType)</PackageLicenseExpression>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
+
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="AppIcon.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Update="Readme.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+</Project>

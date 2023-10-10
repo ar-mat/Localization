@@ -1,0 +1,8 @@
+﻿<LocalizableStringDictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <String Key="MessageBox_Caption_Info" Value="Տեղեկություն" />
+    <String Key="MessageBox_Caption_Warning" Value="Զգուշացում" />
+    <String Key="MessageBox_Caption_Error" Value="Սխալ" />
+    <String Key="TextBox_ManuallyTranslatedValue" Value="Թարգմանվել է ձեռքով․․․" />
+    <String Key="ErrorMessage_SomethingFailed" Value="Ինչ-որ բան խափանվեց։" />
+    <String Key="InfoMessage_Parametrized_Lang_Text" Value="Ներկայիս նշված լեզուն {0}ն է։&#xD;&#xA;Տեքստային խմբագրիչի արծեքն է &quot;{1}&quot;։" />
+</LocalizableStringDictionary>

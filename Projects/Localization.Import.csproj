@@ -1,0 +1,33 @@
+﻿<Project>
+
+	<PropertyGroup>
+
+		<Company>Armat</Company>
+		<Product>Armat Localization</Product>
+		<Authors>Ara Petrosyan</Authors>
+
+		<Version>1.2.0</Version>
+		<AssemblyVersion>$(Version).0</AssemblyVersion>
+		<FileVersion>$(Version).0</FileVersion>
+		<!--<_NugetVersionPostfix>-beta</_NugetVersionPostfix>-->
+		<_NugetVersionPostfix></_NugetVersionPostfix>
+
+		<_DotNetVersion>net6.0</_DotNetVersion>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+		<_BinDir>$(SolutionDir)\..\..\bin\$(Configuration)</_BinDir>
+		<OutputPath>$(_BinDir)\</OutputPath>
+		<IntermediateOutputPath>$(OutputPath)\obj\$(MSBuildProjectName)\</IntermediateOutputPath>
+
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+
+		<_ProjectWebpageUrl>http://armat.am/products/localization</_ProjectWebpageUrl>
+		<_ProjectLicenseType>MIT</_ProjectLicenseType>
+		<_SourceCoreRepositoryRootUrl>https://github.com/ar-mat/Loclization/tree/main</_SourceCoreRepositoryRootUrl>
+		<_SourceCoreRepositoryType>git</_SourceCoreRepositoryType>
+
+	</PropertyGroup>
+
+</Project>

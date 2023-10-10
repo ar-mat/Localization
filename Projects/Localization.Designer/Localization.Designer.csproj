@@ -1,0 +1,91 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import common definitions -->
+	<Import Project="../Localization.Import.csproj" />
+
+	<PropertyGroup>
+
+		<AssemblyName>armat.localization.designer</AssemblyName>
+		<RootNamespace>Armat.Localization.Designer</RootNamespace>
+		<ApplicationIcon>Resources\AppIcon.ico</ApplicationIcon>
+
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>$(_DotNetVersion)-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+		
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
+
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(Version)$(_NugetVersionPostfix)" />
+		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\Localization.Core\Localization.Core.csproj" />
+
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.wpf" Version="$(Version)$(_NugetVersionPostfix)" />
+		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\Localization.Wpf\Localization.Wpf.csproj" />
+		
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Resources\AppIcon.png" />
+		
+		<None Remove="Resources\LocalizableResourceType_Unknown.png" />
+		<None Remove="Resources\LocalizableResourceType_SD.png" />
+		<None Remove="Resources\LocalizableResourceType_WPF.png" />
+		<None Remove="Resources\ToolbarScanDirectory.png" />
+		<None Remove="Resources\ToolbarAddFiles.png" />
+		<None Remove="Resources\ToolbarRemoveSelected.png" />
+		<None Remove="Resources\ToolbarClearFiles.png" />
+		<None Remove="Resources\ToolbarSaveAll.png" />
+		<None Remove="Resources\TranslationsAddLanguage.png" />
+		<None Remove="Resources\TranslationsRemoveLanguage.png" />
+
+		<Page Remove="Localization\UIContentsRD.xaml" />
+		<Page Remove="Localization\UIMessagesSD.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Resources\AppIcon.ico" />
+		<Resource Include="Resources\AppIcon.png" />
+		
+		<Resource Include="Resources\LocalizableResourceType_Unknown.png" />
+		<Resource Include="Resources\LocalizableResourceType_SD.png" />
+		<Resource Include="Resources\LocalizableResourceType_WPF.png" />
+		<Resource Include="Resources\ToolbarScanDirectory.png" />
+		<Resource Include="Resources\ToolbarAddFiles.png" />
+		<Resource Include="Resources\ToolbarRemoveSelected.png" />
+		<Resource Include="Resources\ToolbarClearFiles.png" />
+		<Resource Include="Resources\ToolbarSaveAll.png" />
+		<Resource Include="Resources\TranslationsAddLanguage.png" />
+		<Resource Include="Resources\TranslationsRemoveLanguage.png" />
+
+		<Resource Include="Localization\UIContentsRD.xaml" />
+		<EmbeddedResource Include="Localization\UIMessagesSD.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Localization\en\UIContentsRD.trd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\en\UIMessagesSD.tsd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\hy\UIContentsRD.trd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\hy\UIMessagesSD.tsd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\ru\UIContentsRD.trd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\ru\UIMessagesSD.tsd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>

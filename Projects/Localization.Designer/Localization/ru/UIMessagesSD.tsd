@@ -1,0 +1,9 @@
+﻿<LocalizableStringDictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <String Key="MessageBox_Caption_Info" Value="Информация" />
+    <String Key="MessageBox_Caption_Warning" Value="Предупреждение" />
+    <String Key="MessageBox_Caption_Error" Value="Ошибка" />
+    <String Key="UIMessage_SelectLanguage" Value="Необходимо выберите язык, чтобы добавить перевод." />
+    <String Key="UIMessage_DeleteTransFor_Lang" Value="Вы уверены, что хотите удалить все переводы для языка &quot;{0}&quot;?&#xD;&#xA;Примечание. Язык будет безвозвратно удален из всех загруженных локализуемых файлов." />
+    <String Key="LanguageSelector_NoSelection" Value="[Выберите язык]" />
+    <String Key="OpenFileSelector_FilterLabel" Value="Все локализуемые файлы" />
+</LocalizableStringDictionary>

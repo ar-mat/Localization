@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import common definitions -->
+	<Import Project="../../Localization.Import.csproj" />
+
+	<PropertyGroup>
+
+		<RootNamespace>Armat.Localization.Demo.Lib</RootNamespace>
+		<AssemblyName>armat.localization.demo.lib</AssemblyName>
+
+		<OutputType>Library</OutputType>
+		<TargetFramework>$(_DotNetVersion)</TargetFramework>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(Version)$(_NugetVersionPostfix)" />
+		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\..\Localization.Core\Localization.Core.csproj" />
+
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Localization\StringDictionary.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Localization\StringDictionary.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Localization\en\StringDictionary.tsd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\hy\StringDictionary.tsd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\ru\StringDictionary.tsd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import common definitions -->
+	<Import Project="../../Localization.Import.csproj" />
+
+	<PropertyGroup>
+
+		<RootNamespace>Armat.Localization.Demo</RootNamespace>
+		<AssemblyName>armat.localization.demo.wpf</AssemblyName>
+		<ApplicationIcon>Resources\AppIcon.ico</ApplicationIcon>
+
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>$(_DotNetVersion)-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
+
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(Version)$(_NugetVersionPostfix)" />
+		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\..\Localization.Core\Localization.Core.csproj" />
+
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.wpf" Version="$(Version)$(_NugetVersionPostfix)" />
+		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\..\Localization.Wpf\Localization.Wpf.csproj" />
+
+		<ProjectReference Include="..\ClassLibrary\ClassLibrary.csproj" />
+
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Resources\AppIcon.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Resources\AppIcon.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Localization\en\PopupRD.trd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\en\ResourceDictionary.trd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\hy\PopupRD.trd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\hy\ResourceDictionary.trd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\ru\PopupRD.trd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\ru\ResourceDictionary.trd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>

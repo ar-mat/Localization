@@ -1,0 +1,16 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <s:String x:Key="Toolbar_RemoveSelected">Удалить выбранные</s:String>
+    <s:String x:Key="Toolbar_ScanDirectory">Сканировать каталог</s:String>
+    <s:String x:Key="Toolbar_AddFiles">Добавить файл(ы)</s:String>
+    <s:String x:Key="Lable_LocalizableFiles">Локализуемые файлы</s:String>
+    <s:String x:Key="TableTrans_ResourceFileIdColumnHeader">ИД файла ресурса</s:String>
+    <s:String x:Key="TableFiles_FileDirColumnHeader">Адрес каталога</s:String>
+    <s:String x:Key="Toolbar_SaveAll">Сохранить все</s:String>
+    <s:String x:Key="TableTrans_ResourceKeyColumnHeader">Ключ ресурса</s:String>
+    <s:String x:Key="TableFiles_FileTypeColumnHeader">Тип</s:String>
+    <s:String x:Key="Toolbar_ClearFiles">Стереть файл(ы)</s:String>
+    <s:String x:Key="TableTrans_NativeValueColumnHeader">Исходный язик</s:String>
+    <s:String x:Key="TableTrans_FileNameColumnHeader">Имя файла</s:String>
+    <s:String x:Key="TableFiles_FileNameColumnHeader">Имя файла</s:String>
+    <s:String x:Key="Lable_Translations">Переводы</s:String>
+</ResourceDictionary>

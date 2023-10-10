@@ -1,0 +1,11 @@
+<LocalizableStringDictionary>
+
+	<String Key="MessageBox_Caption_Info" Value="Information"/>
+	<String Key="MessageBox_Caption_Warning" Value="Warning"/>
+	<String Key="MessageBox_Caption_Error" Value="Error"/>
+
+	<String Key="TextBox_ManuallyTranslatedValue" Value="Translated manually..."/>
+	<String Key="ErrorMessage_SomethingFailed" Value="Something failed!"/>
+	<String Key="InfoMessage_Parametrized_Lang_Text" Value="Currently selected langiage is {0}. TextBox value is {1}․" />
+
+</LocalizableStringDictionary>

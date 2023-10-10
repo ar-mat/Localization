@@ -1,0 +1,8 @@
+﻿<LocalizableStringDictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <String Key="MessageBox_Caption_Info" Value="Информация" />
+    <String Key="MessageBox_Caption_Warning" Value="Предупреждение" />
+    <String Key="MessageBox_Caption_Error" Value="Ошибка" />
+    <String Key="TextBox_ManuallyTranslatedValue" Value="Перешедено вручную..." />
+    <String Key="ErrorMessage_SomethingFailed" Value="Что-то пошло не так!" />
+    <String Key="InfoMessage_Parametrized_Lang_Text" Value="Текущий Выбранный язык {0}.&#xD;&#xA;Значение в текстовом поле &quot;{1}&quot;․" />
+</LocalizableStringDictionary>

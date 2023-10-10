@@ -1,0 +1,243 @@
+﻿<Window x:Class="Armat.Localization.Designer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Armat.Localization.Designer"
+        xmlns:loc="clr-namespace:Armat.Localization;assembly=armat.localization.core"
+        xmlns:loc_wpf="clr-namespace:Armat.Localization.Wpf;assembly=armat.localization.wpf"
+        mc:Ignorable="d"
+        x:Name="This"
+        Title="Armat Localization Designer" Height="400" Width="700"
+        Icon="/Resources/AppIcon.png"
+        Closing="OnWindowClosing">
+
+    <!-- Resources -->
+    <Window.Resources>
+
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+
+                <loc_wpf:LocalizableResourceDictionary 
+                    Source="/Armat.Localization.Designer;component/Localization/UIContentsRD.xaml"/>
+
+                <ResourceDictionary>
+
+                    <RoutedCommand x:Key="ScanDirectoryCommand" />
+                    <RoutedCommand x:Key="AddFilesCommand" />
+                    <RoutedCommand x:Key="RemoveSelectedCommand" />
+                    <RoutedCommand x:Key="ClearFilesCommand" />
+                    <RoutedCommand x:Key="SaveAllCommand" />
+                    <RoutedCommand x:Key="AddLanguageCommand" />
+                    <RoutedCommand x:Key="RemoveLanguageCommand" />
+
+                    <Style x:Key="DataGridCellStyle" TargetType="DataGridCell">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="FontSize" Value="14"/>
+                    </Style>
+                    <Style x:Key="TranslationsDataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+                        <Setter Property="FontStyle"  Value="Italic" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                    <Style x:Key="DataGridStyle" TargetType="DataGrid">
+                        <Setter Property="AutoGenerateColumns" Value="False"/>
+                        <Setter Property="GridLinesVisibility" Value="Vertical"/>
+                        <Setter Property="CanUserAddRows" Value="False"/>
+                        <Setter Property="CanUserDeleteRows" Value="False"/>
+                        <Setter Property="RowHeaderWidth" Value="0"/>
+                        <Setter Property="RowBackground" Value="White"/>
+                        <Setter Property="AlternatingRowBackground" Value="AliceBlue"/>
+                        <Setter Property="Foreground" Value="Black"/>
+                        <Setter Property="VerticalGridLinesBrush" Value="LightGray"/>
+                        <Setter Property="CanUserReorderColumns" Value="False"/>
+                        <Setter Property="CellStyle" Value="{StaticResource DataGridCellStyle}"/>
+                    </Style>
+                    <Style x:Key="TranslationsDataGridReaderStyle" TargetType="TextBlock">
+                    </Style>
+                    <Style x:Key="TranslationsDataGridEditorStyle" TargetType="TextBox">
+                        <Setter Property="Background" Value="LightYellow"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <EventSetter Event="Loaded" Handler="OnTranslationsGridCellLoaded"/>
+                        <EventSetter Event="Unloaded" Handler="OnTranslationsGridCellUnloaded"/>
+                        <EventSetter Event="PreviewKeyDown" Handler="OnTranslationsGridCellKeyDown"/>
+                    </Style>
+                    <Style x:Key="ToolBarButtonStyle" TargetType="Button">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="3"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Padding" Value="4,4,2,2"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+
+                    <DataTemplate x:Key="ResourceTypeImageCell">
+                        <!--<TextBlock Text="{Binding ResourceType}"/>-->
+                        <Image Stretch="None" Source="{Binding ResourceTypeImageSource}"/>
+                    </DataTemplate>
+                    <DataTemplate x:Key="TranslationsColumnHeaderDataTemplate">
+                        <DockPanel LastChildFill="true">
+                            <Button DockPanel.Dock="Right" Style="{StaticResource ToolBarButtonStyle}" Command="{StaticResource RemoveLanguageCommand}">
+                                <Image Stretch="None" Source="/Resources/TranslationsRemoveLanguage.png"/>
+                            </Button>
+                            <Label Content="{Binding}"/>
+                        </DockPanel>
+                    </DataTemplate>
+                    <DataTemplate x:Key="AddLanguageColumnHeaderDataTemplate">
+                        <DockPanel LastChildFill="true">
+                            <Button DockPanel.Dock="Right" Style="{StaticResource ToolBarButtonStyle}" Command="{StaticResource AddLanguageCommand}">
+                                <Image Stretch="None" Source="/Resources/TranslationsAddLanguage.png"/>
+                            </Button>
+							<ComboBox ItemsSource="{x:Static local:MainWindow.SupportedLocales}" 
+                          SelectedIndex="0" IsEditable="True">
+                            </ComboBox>
+                        </DockPanel>
+                    </DataTemplate>
+
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+
+    </Window.Resources>
+
+    <!-- Tool bar actions -->
+    <Window.CommandBindings>
+        <CommandBinding Command="{StaticResource ScanDirectoryCommand}" Executed="OnScanDirectory" CanExecute="CanScanDirectory"/>
+        <CommandBinding Command="{StaticResource AddFilesCommand}" Executed="OnAddFiles" CanExecute="CanAddFiles"/>
+        <CommandBinding Command="{StaticResource RemoveSelectedCommand}" Executed="OnRemoveSelected" CanExecute="CanRemoveSelected"/>
+        <CommandBinding Command="{StaticResource ClearFilesCommand}" Executed="OnClearFiles" CanExecute="CanClearFiles"/>
+        <CommandBinding Command="{StaticResource SaveAllCommand}" Executed="OnSaveAll" CanExecute="CanSaveAll"/>
+        <CommandBinding Command="{StaticResource AddLanguageCommand}" Executed="OnAddLanguage" CanExecute="CanAddLanguage"/>
+        <CommandBinding Command="{StaticResource RemoveLanguageCommand}" Executed="OnRemoveLanguage" CanExecute="CanRemoveLanguage"/>
+        <CommandBinding Command="{StaticResource RemoveLanguageCommand}" Executed="OnRemoveLanguage" CanExecute="CanRemoveLanguage"/>
+    </Window.CommandBindings>
+
+    <Grid DataContext="{Binding ElementName=This}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="100*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="80*"/>
+        </Grid.ColumnDefinitions>
+        <GridSplitter Grid.Column="1" Grid.Row="2"  
+                      Width="3" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"/>
+
+        <!-- Tool bar -->
+        <DockPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
+                   LastChildFill="True">
+
+            <ComboBox DockPanel.Dock="Right" Name="_comboBoxLanguageSelector"
+					  VerticalContentAlignment="Center"
+                      ItemsSource="{Binding Source={x:Static loc:LocalizationManager.Default}, Path=AllLocales}"
+					  SelectedItem="{Binding Source={x:Static loc:LocalizationManager.Default}, Path=CurrentLocale, Mode=OneTime}"
+                      SelectionChanged="OnUILanguageSelectionChanged"/>
+
+            <StackPanel Orientation="Horizontal">
+                <Button Command="{StaticResource ScanDirectoryCommand}" Style="{StaticResource ToolBarButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Resources/ToolbarScanDirectory.png" Stretch="None" />
+                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Toolbar_ScanDirectory}"/>
+                    </StackPanel>
+                </Button>
+                <Button Command="{StaticResource AddFilesCommand}" Style="{StaticResource ToolBarButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Resources/ToolbarAddFiles.png" Stretch="None" />
+                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Toolbar_AddFiles}"/>
+                    </StackPanel>
+                </Button>
+                <Button Command="{StaticResource RemoveSelectedCommand}" Style="{StaticResource ToolBarButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Resources/ToolbarRemoveSelected.png" Stretch="None" />
+                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Toolbar_RemoveSelected}"/>
+                    </StackPanel>
+                </Button>
+                <Button Command="{StaticResource ClearFilesCommand}" Style="{StaticResource ToolBarButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Resources/ToolbarClearFiles.png" Stretch="None" />
+                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Toolbar_ClearFiles}"/>
+                    </StackPanel>
+                </Button>
+                <Button Command="{StaticResource SaveAllCommand}" Style="{StaticResource ToolBarButtonStyle}"
+                    Visibility="Visible" >
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Resources/ToolbarSaveAll.png" Stretch="None" />
+                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Toolbar_SaveAll}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+        </DockPanel>
+
+        <!-- Localizable Files -->
+        <Label Grid.Row="1" Grid.Column="0" Content="{DynamicResource Lable_LocalizableFiles}"/>
+        <DockPanel Grid.Row="2" Grid.Column="0" LastChildFill="True">
+            <DataGrid x:Name="_localizableFilesDataGrid" ItemsSource="{Binding LocalizableFiles}" 
+                      Style="{StaticResource DataGridStyle}" 
+                      FrozenColumnCount="1" SelectionUnit="FullRow" SelectionMode="Extended" 
+                      SelectionChanged="OnLocalizableFilesSelectionChanged">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn CellTemplate="{StaticResource ResourceTypeImageCell}" IsReadOnly="True">
+                        <DataGridTemplateColumn.Header>
+                            <TextBlock Text="{DynamicResource TableFiles_FileTypeColumnHeader}"/>
+                        </DataGridTemplateColumn.Header>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Binding="{Binding Path=FileName}" IsReadOnly="True" >
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource TableFiles_FileNameColumnHeader}"/>
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding Path=DirectoryPath}" IsReadOnly="True" >
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource TableFiles_FileDirColumnHeader}"/>
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+
+        <!-- Translations -->
+        <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal">
+            <Label Content="{DynamicResource Lable_Translations}"/>
+            <ProgressBar x:Name="_progressLoading" Visibility="Hidden" Orientation="Horizontal" 
+                         Width="50" Height="10" IsIndeterminate="True" />
+        </StackPanel>
+        <DockPanel Grid.Row="2" Grid.Column="2" LastChildFill="True">
+            <DataGrid x:Name="_translationsDataGrid" ItemsSource="{Binding TranslationsTable}"
+                      Style="{StaticResource DataGridStyle}" 
+                      FrozenColumnCount="3" SelectionUnit="Cell" SelectionMode="Single">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Binding="{Binding Path=ResourceFileId}" IsReadOnly="True" Visibility="Collapsed" >
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource TableTrans_ResourceFileIdColumnHeader}"/>
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding Path=ResourceFileName}" IsReadOnly="True" >
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource TableTrans_FileNameColumnHeader}"/>
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding Path=ResourceKey}" IsReadOnly="True" >
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource TableTrans_ResourceKeyColumnHeader}"/>
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding Path=NativeValue}" IsReadOnly="True" >
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource TableTrans_NativeValueColumnHeader}"/>
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn IsReadOnly="True"
+                                        HeaderTemplate="{StaticResource AddLanguageColumnHeaderDataTemplate}"
+                                        HeaderStyle="{StaticResource TranslationsDataGridColumnHeaderStyle}">
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+
+    </Grid>
+</Window>

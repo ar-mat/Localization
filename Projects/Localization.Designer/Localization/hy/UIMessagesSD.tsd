@@ -1,0 +1,9 @@
+﻿<LocalizableStringDictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <String Key="MessageBox_Caption_Info" Value="Տեղեկություն" />
+    <String Key="MessageBox_Caption_Warning" Value="Զգուշացում" />
+    <String Key="MessageBox_Caption_Error" Value="Սխալ" />
+    <String Key="UIMessage_SelectLanguage" Value="Անհրաժեշտ է նշել լեզուն նոր թարգմանություն ավելացնելու համար։" />
+    <String Key="UIMessage_DeleteTransFor_Lang" Value="Համոզվա՞ծ եք, որ ցանկանում եք ջնջել բոլոր թարգմանությունները &quot;{0}&quot; լեզվի համար։&#xD;&#xA;Նշում․ Լեզուն անդառնալիորեն ջնջվելու է բոլոր բեռնված տեղայնացվող ֆայլերի համար։" />
+    <String Key="LanguageSelector_NoSelection" Value="[Ընտրել լեզուն]" />
+    <String Key="OpenFileSelector_FilterLabel" Value="Բոլոր տեղայնացվող ֆայլերը" />
+</LocalizableStringDictionary>
