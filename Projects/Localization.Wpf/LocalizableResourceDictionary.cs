@@ -186,6 +186,9 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			if (uri == null)
 				return String.Empty;
 
+			if (uri.IsFile)
+				return uri.OriginalString;
+
 			if (uri.IsAbsoluteUri)
 				return uri.AbsolutePath;
 
