@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Armat.Localization.Designer;
+
 public class LocalizableResourceFile
 {
 	public LocalizableResourceFile()

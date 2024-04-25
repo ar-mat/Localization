@@ -22,6 +22,7 @@ using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using TextBox = System.Windows.Controls.TextBox;
 
 namespace Armat.Localization.Designer;
+
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>

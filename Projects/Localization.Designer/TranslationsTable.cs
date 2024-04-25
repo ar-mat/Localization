@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 
 namespace Armat.Localization.Designer;
+
 public class TranslationsTable : DataTable
 {
 	public TranslationsTable() : base(nameof(TranslationsTable))

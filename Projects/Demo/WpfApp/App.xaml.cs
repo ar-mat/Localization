@@ -2,6 +2,7 @@
 using System.Windows;
 
 namespace Armat.Localization.Demo;
+
 /// <summary>
 /// Interaction logic for App.xaml
 /// </summary>

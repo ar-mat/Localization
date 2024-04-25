@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 
 namespace Armat.Localization.Demo;
+
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
