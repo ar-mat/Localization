@@ -22,16 +22,15 @@ public static class ClassFromLibrary
 	public static String ComposeInfoMessage(String textBoxValue)
 	{
 		LocalizableStringDictionary dict = StringDictionary.Instance.LocalizedStrings;
-		String? messageFormat;
 
 		// get the message format
-		if (!dict.TryGetValue("InfoMessage_Parametrized_Lang_Text", out messageFormat) ||
-			String.IsNullOrEmpty(messageFormat))
+		if (dict.TryGetValue("InfoMessage_Parametrized_Lang_Text", out String? messageFormat) &&
+			!String.IsNullOrEmpty(messageFormat))
 		{
-			return String.Empty;
+			// compose the message
+			return String.Format(messageFormat, dict.LocalizationManager.CurrentLocale, textBoxValue);
 		}
 
-		// compose the message
-		return String.Format(messageFormat, dict.LocalizationManager.CurrentLocale, textBoxValue);
+		return String.Empty;
 	}
 }
