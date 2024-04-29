@@ -11,8 +11,8 @@
 	- More formats to come
 
 `Armat.Localization` library consists of the following projects:
-- `Armat.Localization.Core` is the core module for Armat.Localization library. See [here](https://github.com/ar-mat/Localization/tree/main/Localization.Core) for more information.
-- `Armat.Localization.Wpf` can be used for localizing Wpf Resource Dictionaries. See [here](https://github.com/ar-mat/toolset/tree/main/Localization/Localization.Wpf) for more information.
-- `Armat.Localization.Designer` is a Wpf application for translating localizable files. You can download it from [here](https://github.com/ar-mat/toolset/tree/main/Localization/Localization.Designer).
+- `Armat.Localization.Core` is the core module for Armat.Localization library. See [here](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Core) for more information.
+- `Armat.Localization.Wpf` can be used for localizing Wpf Resource Dictionaries. See [here](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Wpf) for more information.
+- `Armat.Localization.Designer` is a Wpf application for translating localizable files. You can download it from [here](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Designer).
 
 Thank you for the contribution!
