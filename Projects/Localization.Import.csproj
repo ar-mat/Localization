@@ -12,7 +12,7 @@
 		<!--<_NugetVersionPostfix>-beta</_NugetVersionPostfix>-->
 		<_NugetVersionPostfix></_NugetVersionPostfix>
 
-		<_DotNetVersion>net6.0</_DotNetVersion>
+		<_DotNetVersion>net8.0</_DotNetVersion>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
 		<_BinDir>$(SolutionDir)\..\..\bin\$(Configuration)</_BinDir>
