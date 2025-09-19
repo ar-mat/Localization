@@ -15,6 +15,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassLibrary", "..\..\Proje
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfApp", "..\..\Projects\Demo\WpfApp\WpfApp.csproj", "{BCC6F7E0-8BA7-4489-84B3-0C406E542492}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BuildScripts", "BuildScripts", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\BuildScripts\GetAssemblyVersion.ps1 = ..\..\BuildScripts\GetAssemblyVersion.ps1
+		..\..\BuildScripts\Pack.ps1 = ..\..\BuildScripts\Pack.ps1
+		..\..\BuildScripts\Publish.ps1 = ..\..\BuildScripts\Publish.ps1
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

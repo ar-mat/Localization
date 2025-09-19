@@ -25,7 +25,7 @@
 
 		<_ProjectWebpageUrl>http://armat.am/products/localization</_ProjectWebpageUrl>
 		<_ProjectLicenseType>MIT</_ProjectLicenseType>
-		<_SourceCoreRepositoryRootUrl>https://github.com/ar-mat/Localization/tree/main</_SourceCoreRepositoryRootUrl>
+		<_SourceCoreRepositoryRootUrl>https://github.com/ar-mat/Localization</_SourceCoreRepositoryRootUrl>
 		<_SourceCoreRepositoryType>git</_SourceCoreRepositoryType>
 
 	</PropertyGroup>
