@@ -6,7 +6,7 @@
 		<Product>Armat Localization</Product>
 		<Authors>Ara Petrosyan</Authors>
 
-		<Version>2.0.0</Version>
+		<Version>2.0.1</Version>
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<FileVersion>$(Version).0</FileVersion>
 		<!--<_NugetVersionPostfix>-beta</_NugetVersionPostfix>-->

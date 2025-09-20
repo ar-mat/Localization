@@ -1,29 +1,36 @@
 ﻿# Run in release mode
-param($Configuration = "Release")
+param(
+    [string]$Configuration = "Release",
+    [string]$ProjectName = ""
+)
 
-# define array of project names
+# define array of project names (default set)
 $Projects = @("Localization.Core", "Localization.Wpf")
 
-#iterate by project names
-foreach ($ProjectName in $Projects) {
+# If a specific project name was passed, limit the list to just that project
+if (![string]::IsNullOrWhiteSpace($ProjectName)) {
+    $Projects = @($ProjectName)
+}
 
-	# Get the original directoty, it will get back there after it's done
-	$OriginalDir=Get-Location | select -ExpandProperty Path
+#iterate by project names
+foreach ($Proj in $Projects) {
+
+	# Get the original directory, it will get back there after it's done
+	$OriginalDir = Get-Location | Select-Object -ExpandProperty Path
 
 	# Go to the project directory
-	cd ../Projects/$ProjectName
+	cd ../Projects/$Proj
 
-	# Tagret path of published artifacts
+	# Target path of published artifacts
 	$BuildPath = "../../bin/$Configuration"
-	$TargetPath = "$BuildPath/pack/$ProjectName"
+	$TargetPath = "$BuildPath/pack/$Proj"
 
 	#Build the project
-	dotnet build $ProjectName.csproj -c $Configuration -o $BuildPath
+	dotnet build "$Proj.csproj" -c $Configuration -o $BuildPath
 
 	# Pack nuget artifacts
-	dotnet pack $ProjectName.csproj -c $Configuration --no-build -o $TargetPath /p:OutputPath=$BuildPath
+	dotnet pack "$Proj.csproj" -c $Configuration --no-build -o $TargetPath /p:OutputPath=$BuildPath
 
 	# Go back to the original directory
 	cd $OriginalDir
-
 }

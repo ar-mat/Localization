@@ -1,26 +1,34 @@
 ﻿# Run in release mode
-param($Configuration = "Release")
+param(
+    [string]$Configuration = "Release",
+    [string]$ProjectName = ""
+)
 
-# define array of project names
+# define array of project names (default full set)
 $Projects = @("Localization.Core", "Localization.Wpf", "Localization.Designer")
 
-#iterate by project names
-foreach ($ProjectName in $Projects) {
+# If a specific project name was passed, limit list to that one
+if (![string]::IsNullOrWhiteSpace($ProjectName)) {
+    $Projects = @($ProjectName)
+}
 
-    # Get the original directoty, it will get back there after it's done
-    $OriginalDir=Get-Location | select -ExpandProperty Path
+# iterate by project names
+foreach ($Proj in $Projects) {
+
+    # Get the original directory, it will get back there after it's done
+    $OriginalDir = Get-Location | Select-Object -ExpandProperty Path
 
     # Go to the project directory
-    cd ../Projects/$ProjectName
+    cd ../Projects/$Proj
 
-    # Tagret path of published artifacts
+    # Target path of published artifacts
     $BuildPath = "../../bin/$Configuration"
-    $TargetPath = "$BuildPath/publish/$ProjectName"
+    $TargetPath = "$BuildPath/publish/$Proj"
 
     # Build the project
-    dotnet build $ProjectName.csproj -c $Configuration -o $BuildPath
+    dotnet build "$Proj.csproj" -c $Configuration -o $BuildPath
 
-    # Get the build version
+    # Get the build version (still reading core dll version as before)
     $Version = & "$OriginalDir/GetAssemblyVersion.ps1" -AssemblyPath $BuildPath/armat.localization.core.dll
 
     # Clean all contents in the Target path
@@ -29,12 +37,11 @@ foreach ($ProjectName in $Projects) {
     }
 
     # Publish artifacts
-    dotnet publish $ProjectName.csproj -c $Configuration --no-build -o $TargetPath /p:OutputPath=$BuildPath
+    dotnet publish "$Proj.csproj" -c $Configuration --no-build -o $TargetPath /p:OutputPath=$BuildPath
 
     # Zip the contents
-    Compress-Archive -Path $TargetPath -DestinationPath $TargetPath/../Armat.$ProjectName-$Version.zip -Force
+    Compress-Archive -Path $TargetPath -DestinationPath $TargetPath/../Armat.$Proj-$Version.zip -Force
 
     # Go back to the original directory
     cd $OriginalDir
-
 }
