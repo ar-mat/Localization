@@ -11,16 +11,18 @@ public record struct Configuration : IEquatable<Configuration>
 		TranslationLoadBehavior = TranslationLoadBehavior.KeepNative;
 	}
 
-	public static readonly Configuration Default = new()
+	private static readonly Configuration _default = new()
 	{
 		DefaultLocale = LocaleInfo.Invalid,
 		TranslationsDirectoryPath = "Localization",
 		TranslationLoadBehavior = TranslationLoadBehavior.KeepNative
 	};
+	public static Configuration Default => _default;
 
 	public LocaleInfo? DefaultLocale { get; set; }
 	public String TranslationsDirectoryPath { get; set; }
 	public TranslationLoadBehavior TranslationLoadBehavior { get; set; }
+
 }
 
 public enum TranslationLoadBehavior

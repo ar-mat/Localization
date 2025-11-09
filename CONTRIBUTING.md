@@ -48,12 +48,22 @@ public class LocalizationManager
 
 ## 🔄 Workflow
 
-1. **Fork** the repository
-2. **Create branch**: `feature/your-feature` or `bugfix/issue-description`
-3. **Make changes** following code style
-4. **Test** your changes
-5. **Commit** with clear messages: `feat(core): add new feature`
-6. **Submit** pull request
+**Important**: All contributions must be submitted via pull requests. Direct commits to the main branch are not allowed.
+
+1. **Fork** the repository to your GitHub account
+4. **Make changes** following the code style guidelines
+5. **Test** your changes thoroughly
+6. **Commit** with clear, descriptive messages: `feat(core): add new feature`
+7. **Push** your branch to your fork
+8. **Submit a pull request** to the main repository's `main` branch
+9. **Wait for review** and address any feedback from maintainers
+
+### Pull Request Guidelines
+- Provide a clear title and description
+- Reference any related issues using `#issue-number`
+- Ensure all tests pass
+- Keep pull requests focused on a single feature or fix
+- Update documentation if necessary
 
 ## 🐛 Issues & Features
 

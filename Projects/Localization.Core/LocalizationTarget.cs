@@ -49,13 +49,13 @@ public interface ILocalizableResource
 	// saves the current locale translation
 	void SaveTranslation();
 
-	// Creates a translation for the given locale if it doesn't exists
+	// Creates a translation for the given locale if it doesn't exist
 	void CreateTranslation(LocaleInfo locale);
 
 	// Deletes translation for the given locale
 	void DeleteTranslation(LocaleInfo locale);
 
-	// returns collection of key -> translation for teh current locale
+	// returns collection of key -> translation for the current locale
 	IEnumerable<KeyValuePair<String, String>> Enumerate();
 
 	// updates translations for the given entries

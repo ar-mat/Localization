@@ -30,7 +30,9 @@ public record LocaleInfo : IComparable<LocaleInfo>
 		}
 	}
 
-	public static readonly LocaleInfo Invalid = new() { DisplayNameOverride = "[Native]" };
+	private static readonly LocaleInfo _invalid = new() { DisplayNameOverride = "[Native]" };
+	public static LocaleInfo Invalid { get => _invalid; }
+
 	public static IEnumerable<LocaleInfo> AllLocales
 	{
 		get => CultureInfo.GetCultures(CultureTypes.AllCultures).
@@ -66,6 +68,7 @@ public record LocaleInfo : IComparable<LocaleInfo>
 			return Culture.DisplayName;
 		}
 	}
+
 
 	// comparison by names allows getting a sorted list of all locales to be displayed on locale selectors
 	public Int32 CompareTo(LocaleInfo? other)

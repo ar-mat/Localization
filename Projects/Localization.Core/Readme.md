@@ -43,75 +43,100 @@ All types described below belong to `Armat.Localization` namespace.
 
 ### `LocaleInfo` record class
 
-Represents a wrapper over `System.Globalization.CultureInfo` class, specializing it for `Armat.Localization.Core` library.
+Represents a wrapper over `System.Globalization.CultureInfo` class, specializing it for `Armat.Localization.Core` library. Implements `IComparable<LocaleInfo>` for sorting capabilities.
 
-- `Invalid` static property returns a singleton instance of `LocaleInfo` class to be used for *null* or *[Native]* locale.
-- `AllLocales` is static property for enumerating all locales. It's based on `System.Globalization.CultureTypes.AllCultures`, and provides comprehensive list of locales supported by the library.
+- `Invalid` static property returns a singleton instance of `LocaleInfo` class to be used for *null* or *[Native]* locale with display name "[Native]".
+- `AllLocales` static property for enumerating all locales. It's based on `System.Globalization.CultureTypes.AllCultures`, and provides a comprehensive list of locales ordered by `DisplayName`.
 - `Culture` nullable property provides the underlying instance of `System.Globalization.CultureInfo` class.
-- `IsValid` property can be used to check whether the current instance of `LocaleInfo` is a valid instance (`Culture != null`).
-- `Name` property can be used for locale identification. It's not localizable. `Name` returns the value of wrapped `CultureInfo.Name` for non-invalid locales, and is an empty string otherwise.
-- `DisplayName` property can be used for displaying the locale on the UI. It changes based on the `Thread.CurrentThread.CurrentUICulture`. It has the same value as the wrapped `CultureInfo.DisplayName`, although could be overridden at `LocaleInfo` construction time.
+- `DisplayNameOverride` property allows overriding the display name at construction time.
+- `IsValid` property returns `true` when `Culture != null && Culture != CultureInfo.InvariantCulture`.
+- `Name` property returns the wrapped `CultureInfo.Name` for valid locales, and empty string for invalid locales.
+- `DisplayName` property returns `DisplayNameOverride` if set, otherwise returns `Culture.DisplayName` for valid locales.
+- `CompareTo` method provides comparison by locale names for consistent sorting.
+- `ToString()` method returns the `DisplayName` value.
+
+The class supports multiple constructors: parameterless (for Invalid), from `CultureInfo`, from `CultureInfo` with display name override, and from locale name string.
 
 ### `LocalizationManager` class
 
-Acts as a central component of `Armat.Localization.Core` library.
+Acts as a central component of `Armat.Localization.Core` library, providing singleton and instance-based localization management.
 
-- `CreateDefaultInstance` static method can be used at application startup to instantiate the default singleton instance of `LocalizationManager` class. It has overloads to accept `Configuration` parameter and `ILoggerFactory` for logging support, and can be called only once before any usage of `LocalizationManager.Default`. If not created explicitly, the one with default configuration will be created automatically.
-- `CreateInstance` static method creates a new non-singleton instance of `LocalizationManager` with provided configuration and logger factory.
-- `Default` static property representing the singleton instance of `LocalizationManager` class to be used across the application.
-- `Configuration` property describes the Localization Manager configuration of `Armat.Localization.Configuration` type.
-- `AllLocales` property enumerates collection of `LocaleInfo` objects. These are the locales that application has translations for, determined by scanning the translations directory structure.
+**Static Methods:**
+- `CreateDefaultInstance()` static method creates the default singleton instance with default configuration and null logger factory.
+- `CreateDefaultInstance(Configuration config)` creates the default singleton with specified configuration.
+- `CreateDefaultInstance(ILoggerFactory loggerFactory)` creates the default singleton with specified logger factory.
+- `CreateDefaultInstance(Configuration config, ILoggerFactory loggerFactory)` creates the default singleton with both parameters. Can only be called once before any usage of `LocalizationManager.Default`.
+- `CreateInstance(Configuration config)` creates a new non-singleton instance using the default logger factory.
+- `CreateInstance(Configuration config, ILoggerFactory loggerFactory)` creates a new non-singleton instance with specified parameters.
+
+**Properties:**
+- `Default` static property representing the singleton instance. Returns a non-operational instance if not explicitly created.
+- `Configuration` init-only property describes the localization manager configuration.
+- `LoggerFactory` init-only property provides the logger factory used for creating loggers.
 - `CurrentLocale` read-only property returns the currently selected `LocaleInfo` for the application.
-- `ChangeLocale` method allows switching between supported locales at application runtime. There are overloads accepting either `LocaleInfo` or the locale name `String` parameters.
-- `Targets` collection property manages `ILocalizationTarget` objects that receive locale change notifications.
+- `AllLocales` property enumerates collection of `LocaleInfo` objects by scanning the translations directory structure. Returns locales ordered by `DisplayName` with the default locale appearing first if not already included.
+- `Targets` collection property manages `ILocalizationTarget` objects that receive locale change notifications. Uses weak references for automatic cleanup.
+
+**Methods:**
+- `ChangeLocale(String localeName)` and `ChangeLocale(LocaleInfo locale)` methods allow switching between supported locales at application runtime.
+- `GetTranslationsDirectory()` returns `DirectoryInfo` for the base translations directory, resolving relative paths against the entry assembly location.
+- `GetTranslationsDirectory(String localeName)` returns `DirectoryInfo` for a specific locale's translation directory.
+
+**Events:**
 - `LocalizationChanged` event is fired when the locale changes, allowing external components to respond to language switches.
 
-Note: Considering there could be more than one instance of `LocalizationManager` objects, invocation of `ChangeLocale` method doesn't change values of `Thread.CurrentThread.CurrentCulture` or `Thread.CurrentThread.CurrentUICulture` static properties, considering application will change its thread(s) culture(s) based on the appropriate language change callback event.
-
-Note: Passing *LocaleInfo.Invalid* locale to `LocalizationManager.ChangeLocale` will reset application language to the native locale.
-
-The class uses weak references to manage localization targets, ensuring automatic cleanup when targets are disposed.
+The class uses weak references to manage localization targets, ensuring automatic cleanup when targets are disposed. It provides comprehensive logging through the Microsoft.Extensions.Logging framework.
 
 ### `Configuration` record struct
 
-Describes configuration parameters for `LocalizationManager` class provided at construction time.
+Describes configuration parameters for `LocalizationManager` class provided at construction time. Implements `IEquatable<Configuration>`.
 
-- `DefaultLocale` is a nullable `LocaleInfo` field referring to the locale used at application startup. In case of *null* value the *[Native]* locale will be used.
-- `TranslationsDirectoryPath` points to the absolute or relative path to localizable resources translation directory. Default value is "Localization".
-- `TranslationLoadBehavior` is an enumeration of `TranslationLoadBehavior` type with possible values of `KeepNative` (default value), `ClearNative` and `RemoveNative`.
+- `DefaultLocale` is a nullable `LocaleInfo` property referring to the locale used at application startup. Default constructor sets this to `null`. If not null, the `LocalizationManager` class will initialize the `CurrentLocale` property using it's value.
+- `TranslationsDirectoryPath` property points to the absolute or relative path to localizable resources translation directory. Default constructor sets this to empty string. It is required to have a non-empty value for the `LocalizationManager` to be able to locate translation the translation directories and files.
+- `TranslationLoadBehavior` property is an enumeration of `TranslationLoadBehavior` type with possible values of `KeepNative` (default), `ClearNative` and `RemoveNative`. The property is used to determine the value of a localizable field if the translation file doesn't define the localized value.
 
-The `Configuration.Default` static property provides default configuration values that can be used for most applications.
+The `Configuration.Default` static property provides default configuration values with `DefaultLocale = LocaleInfo.Invalid`, `TranslationsDirectoryPath = "Localization"`, and `TranslationLoadBehavior = TranslationLoadBehavior.KeepNative`.
 
 Note: `LocalizationManager.AllLocales` will return a special *[Native]* locale additional to the other locales if *Configuration.DefaultLocale == LocaleInfo.Invalid*. This is the default behavior.
 
 ### `LocalizableStringDictionary` class
 
-Represents a type derived from `Dictionary<String, String>` of key-value pairs. The dictionary key (aka resource key) is used to retrieve appropriate localized values.
+Represents a type derived from `Dictionary<String, String>` of key-value pairs that implements `ISupportInitialize`, `ILocalizationTarget`, and `ILocalizableResource` interfaces for comprehensive translation management.
 
-`LocalizableStringDictionary` can be loaded from an assembly embedded resource, as well as from a local file. The class is used for retrieving translated strings at application runtime and implements both `ILocalizationTarget` and `ILocalizableResource` interfaces.
+**Constructors:**
+- Default parameterless constructor
+- Constructor with `String sourceUri` (uses default LocalizationManager)
+- Constructor with `String sourceUri` and `LocalizationManager`
+- Constructor with `Uri source` (uses default LocalizationManager) 
+- Constructor with `Uri source` and `LocalizationManager`
 
-Following is the format for `LocalizableStringDictionary` resource files:
-
-```xml
-<LocalizableStringDictionary>
-	<String Key="MessageBox_Caption_Info" Value="Information"/>
-	<String Key="MessageBox_Caption_Warning" Value="Warning"/>
-	<String Key="MessageBox_Caption_Error" Value="Error"/>
-</LocalizableStringDictionary>
-```
-
-`LocalizableStringDictionary` class has the following members:
-- `LocalizationManager` property can be set to attach the string dictionary instance to the localization manager. Upon locale change in the localization manager, the appropriate translation will be loaded in the `LocalizableStringDictionary`.
-- `Source` property is used to load the native resource file at a given `Uri`. `Uri` formatting is done in the following way:
-	- For embedded resource files the `Source` Uri must be constructed with uriString: `{AssemblyName};component/{ManifestResourceStreamPath}` and uriKind: `UriKind.Relative`.
-	- For local file paths `Source` Uri must be constructed with uriString: `path to the localizable file` and uriKind: `UriKind.Absolute`.
-- `TranslationsDirRelativePath` property holds the path to the translations directory in case *LocalizationManager.Configuration.TranslationsDirectoryPath* should be overridden.
+**Properties:**
+- `LocalizationManager` property attaches the string dictionary to a localization manager. Cannot be reset once set.
+- `Source` property is used to load the native resource file at a given `Uri`. Setting it triggers auto-loading if the resource file path is available.
+- `TranslationsDirRelativePath` property holds the path to translations directory override.
 - `CurrentLocale` property represents the `LocaleInfo` currently loaded in the string dictionary.
-- `GetValueOrDefault` method can be used to retrieve the translated value from dictionary if available, or the given default value otherwise. This is the API to be used at runtime to read localized values for the given key.
 - `NativeFileExtensions` and `TranslationFileExtensions` properties define supported file extensions ("xaml" for native files, "tsd" for translation files).
-- `FormResourceUri` static method helps create proper URI from a Type for embedded resources.
+- `NativeFileExtension` and `TranslationFileExtension` static properties provide the individual extension strings.
 
-The class implements `ISupportInitialize` interface for proper initialization sequencing and provides comprehensive translation file management including creation, loading, saving, and deletion of translation files.
+**Methods:**
+- `GetValueOrDefault(String key, String defaultValue)` method retrieves the translated value from dictionary if available, or the given default value otherwise.
+- `FormResourceUri(Type type)` static method helps create proper URI from a Type for embedded resources using the format `/{AssemblyName};component/{TypeFullName}.xaml`.
+- `LoadNative()` methods load native language content from file or embedded resource.
+- `CanLoadNative(Uri sourceUri)` checks if the source can be loaded as a valid LocalizableStringDictionary.
+- `LoadTranslation(String localeName)` and `LoadTranslation(LocaleInfo locale)` load translations for the given locale.
+- `SaveTranslation()` saves the current locale translation to file.
+- `CreateTranslation(LocaleInfo locale)` creates an empty translation file for the given locale.
+- `DeleteTranslation(LocaleInfo locale)` deletes the translation file for the given locale.
+- `Enumerate()` returns ordered key-value pairs for the current locale.
+- `UpdateTranslations(IEnumerable<KeyValuePair<String, String>> translations)` updates translations with new values.
+
+**File Path Methods:**
+- `ResourceFilePath` property returns the source URI path.
+- `GetNativeFilePath()` returns absolute file path for file-based sources.
+- `GetNativeResourceStream()` returns stream for embedded resource sources.
+- `GetTranslationFilePath(LocaleInfo locale)` returns the full path to a locale's translation file.
+
+The class automatically manages translation file loading based on localization manager events and supports both embedded resources and external files. URI formatting follows the pattern `{AssemblyName};component/{ManifestResourceStreamPath}` for embedded resources and absolute file paths for external files.
 
 
 ## Additional Interfaces and Types
@@ -120,23 +145,28 @@ The class implements `ISupportInitialize` interface for proper initialization se
 
 Defines the contract for objects that need to receive locale change notifications:
 - `CurrentLocale` property - Gets the current locale of the target
-- `OnLocalizationChanged` method - Called when the locale changes
+- `OnLocalizationChanged(LocalizationManager locManager, LocalizationChangeEventArgs args)` method - Called when the locale changes
 
 ### `ILocalizableResource` Interface  
 
 Defines the contract for localizable resource management:
-- `NativeFileExtensions` and `TranslationFileExtensions` properties - Supported file extensions
+- `NativeFileExtensions` and `TranslationFileExtensions` properties - Supported file extensions arrays
 - `Source` property - URI of the resource source
-- `LoadNative` method - Loads native language content
-- `LoadTranslation`, `SaveTranslation`, `CreateTranslation`, `DeleteTranslation` methods - Translation file management
-- `Enumerate` method - Returns key-value pairs for the current locale
-- `UpdateTranslations` method - Updates translations with new values
+- `LoadNative(Uri sourceUri, LocalizationManager localizationManager)` method - Loads native language content with specified localization manager. It sets the `LocalizationManager` and `Source` properties in case those have not been initialized earlier.
+- `LoadTranslation(LocaleInfo locale)`, `SaveTranslation()`, `CreateTranslation(LocaleInfo locale)`, `DeleteTranslation(LocaleInfo locale)` methods - Translation file management
+- `Enumerate()` method - Returns key-value pairs for the current locale
+- `UpdateTranslations(IEnumerable<KeyValuePair<String, String>> translations)` method - Updates translations with new values
 
 ### `LocalizationChangeEventArgs` Class
 
-Event arguments for locale change events:
-- `OldLocale` property - Previous locale (nullable)
-- `NewLocale` property - New locale
+Event arguments for locale change events, derived from `EventArgs`:
+- `OldLocale` property - Previous locale (nullable, init-only)
+- `NewLocale` property - New locale (init-only)
+- Constructors: `LocalizationChangeEventArgs(LocaleInfo newLocale)` and `LocalizationChangeEventArgs(LocaleInfo? oldLocale, LocaleInfo newLocale)`
+
+### `LocalizationChangeEventHandler` Delegate
+
+Delegate type for localization change events: `delegate void LocalizationChangeEventHandler(object sender, LocalizationChangeEventArgs e)`
 
 ### `TranslationLoadBehavior` Enumeration
 
@@ -144,6 +174,18 @@ Defines how missing translations are handled:
 - `KeepNative` - Keep original native values (default)
 - `ClearNative` - Replace with empty strings
 - `RemoveNative` - Remove keys entirely
+
+### Serialization Support
+
+#### `TextRecord` struct
+- `Key` property - String key with XmlAttribute serialization
+- `Value` property - String value with XmlAttribute serialization
+
+#### `LocalizationDocument` class
+- `RootXmlElementName` constant - "LocalizableStringDictionary"
+- `Records` property - Array of `TextRecord` with XmlElement("String") serialization
+- `Load(Stream stream)` static method - Deserializes from XML stream
+- `Save(Stream stream)` method - Serializes to XML stream with indentation
 
 
 ## General Usage Pattern

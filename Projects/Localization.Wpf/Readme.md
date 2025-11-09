@@ -31,68 +31,54 @@ Install-Package armat.localization.wpf
 
 ## Dependencies
 
-- **armat.localization.core** (v2.0.1) - Core localization functionality
-- **Microsoft.Extensions.Logging.Abstractions** (v9.0.9) - Logging support
+- **armat.localization.core** - Core localization functionality
+- **Microsoft.Extensions.Logging.Abstractions** - Logging support
 - **.NET 8.0-windows** - Windows-specific .NET 8.0 framework with WPF support
 
 See more details about the core functionality in [Armat.Localization.Core](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Core).
 
 ## `LocalizableResourceDictionary` class
 
-Represents a specialized ResourceDictionary that extends WPF's native `ResourceDictionary` with localization capabilities. It implements `ILocalizationTarget` and `ILocalizableResource` interfaces to provide comprehensive translation management for WPF applications.
+Represents a specialized `ResourceDictionary` that extends WPF's native dictionary with localization capabilities. Implements `ISupportInitialize`, `ILocalizationTarget`, and `ILocalizableResource` to integrate with `LocalizationManager` instances, manage translation files, and react to locale changes.
 
-`LocalizableResourceDictionary` can be loaded from WPF assembly resources or local files, automatically managing translations based on the current locale selection.
+`LocalizableResourceDictionary` can be instantiated from pack URIs or file paths. When attached to a `LocalizationManager`, it automatically reloads resources when the active locale changes.
 
 ### File Extensions
 
-- **Native files**: `.xaml` - Standard XAML ResourceDictionary files
-- **Translation files**: `.trd` (Translated Resource Dictionary) - Localized versions
-
-### XAML Format
-
-```xml
-<l_wpf:LocalizableResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:s="clr-namespace:System;assembly=netstandard"
-                    xmlns:l_wpf="clr-namespace:Armat.Localization.Wpf;assembly=armat.localization.wpf">
-
-    <s:String x:Key="MessageBox_Caption_Info">Information</s:String>
-    <s:String x:Key="MessageBox_Caption_Warning">Warning</s:String>
-    <s:String x:Key="MessageBox_Caption_Error">Error</s:String>
-    
-    <!-- Support for other resource types -->
-    <SolidColorBrush x:Key="PrimaryBrush">#FF0078D4</SolidColorBrush>
-    <Thickness x:Key="DefaultMargin">10</Thickness>
-
-</l_wpf:LocalizableResourceDictionary>
-```
-
-### Key Properties and Methods
-
-- **`LocalizationManager`** - Associates the dictionary with a localization manager for automatic language switching
-- **`TranslationsDirRelativePath`** - Custom path for translation files (overrides default configuration)
-- **`CurrentLocale`** - Gets the currently loaded locale information
-- **`GetValueOrDefault<T>(key, defaultValue)`** - Type-safe resource retrieval with fallback support
-- **`NativeFileExtensions`** / **`TranslationFileExtensions`** - Supported file extensions
-- **Translation Management Methods**:
-  - `LoadTranslation(locale)` - Loads translations for specified locale
-  - `SaveTranslation()` - Saves current translations to file
-  - `CreateTranslation(locale)` - Creates new translation file
-  - `DeleteTranslation(locale)` - Removes translation file
-  - `UpdateTranslations(translations)` - Batch update translations
+- **Native files**: `.xaml` – native resource dictionaries packaged with the application
+- **Translation files**: `.trd` – translated resource dictionaries stored per locale
 
 ### Constructors
 
-```csharp
-// Default constructor
-var dictionary = new LocalizableResourceDictionary();
+- `LocalizableResourceDictionary()` – creates an empty dictionary configured for localization
+- `LocalizableResourceDictionary(String sourceUri)` – loads from a URI using the default localization manager
+- `LocalizableResourceDictionary(String sourceUri, LocalizationManager locManager)` – loads from a URI using the supplied manager
+- `LocalizableResourceDictionary(Uri source)` – loads from a `Uri` instance using the default manager
+- `LocalizableResourceDictionary(Uri source, LocalizationManager locManager)` – loads from a `Uri` instance and registers with the supplied manager
 
-// With source URI
-var dictionary = new LocalizableResourceDictionary("pack://application:,,,/MyApp;component/Resources/Strings.xaml");
+### Properties
 
-// With custom localization manager
-var dictionary = new LocalizableResourceDictionary(sourceUri, customLocalizationManager);
-```
+- `LocalizationManager` – assigns the manager that drives locale changes. The property can be set only once; setting it registers the dictionary as a target and creates a scoped logger.
+- `TranslationsDirRelativePath` – optional override for the translations directory relative to the runtime directory.
+- `CurrentLocale` – reports the locale currently applied to the dictionary.
+- `NativeFileExtensions` / `TranslationFileExtensions` – arrays describing supported native (`xaml`) and translated (`trd`) file extensions. Static `NativeFileExtension` and `TranslationFileExtension` expose the individual extensions.
+- `ResourceFilePath` – resolves the source URI to a file path or pack URI string, using `Source` or the XAML base URI.
+
+### Methods
+
+- `GetValueOrDefault<T>(String key, T defaultValue)` – retrieves a resource by key, returning the provided default when lookup or casting fails.
+- `CanLoadNative(Uri sourceUri)` – validates that a file-based source contains a `LocalizableResourceDictionary` root element before loading.
+- `LoadNative()` – reloads the native dictionary from the current `Source` and resets the loaded locale to native.
+- `LoadNative(Uri sourceUri, LocalizationManager localizationManager)` – loads native content from the specified URI while registering with the given manager.
+- `GetTranslationFilePath(LocaleInfo locale)` – composes the absolute path to the translation file for a locale, respecting `TranslationsDirRelativePath` and the manager configuration.
+- `LoadTranslation(String localeName)` / `LoadTranslation(LocaleInfo locale)` – loads translations for the locale. Returns `false` when the locale is invalid or the translation file is missing, and applies `TranslationLoadBehavior` to unmatched keys.
+- `SaveTranslation()` – persists the current contents to the locale-specific `.trd` file, ensuring WPF-compatible XML formatting.
+- `CreateTranslation(LocaleInfo locale)` – creates an empty translation file and parent directories when they do not already exist.
+- `DeleteTranslation(LocaleInfo locale)` – removes the translation file and deletes its directory when empty.
+- `Enumerate()` – returns ordered `KeyValuePair<String, String>` entries for string resources within the dictionary.
+- `UpdateTranslations(IEnumerable<KeyValuePair<String, String>> translations)` – updates string resources for the active locale; throws when called for the native dictionary.
+
+The class leverages `ISupportInitialize` to coordinate native loading and subsequent translation loading. Registration with `LocalizationManager` uses weak references (via the manager) so disposed dictionaries are cleaned up automatically. Translation file discovery relies on the manager's configured translations directory, and all operations are instrumented with `ILogger` for diagnostics.
 
 
 ## Usage Patterns
