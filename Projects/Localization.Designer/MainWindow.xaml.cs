@@ -36,6 +36,11 @@ public partial class MainWindow : Window
 		TranslationsTable = new TranslationsTable();
 	}
 
+	protected override void OnClosed(EventArgs e)
+	{
+		base.OnClosed(e);
+	}
+
 	#region Data members
 
 	// LocalizableFiles property

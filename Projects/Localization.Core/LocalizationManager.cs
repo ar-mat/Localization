@@ -79,9 +79,9 @@ public class LocalizationManager
 	}
 
 	// Read-only instance properties
-	public Configuration Configuration { get; init; }
-	public ILoggerFactory LoggerFactory { get; init; }
-	protected ILogger Logger { get; init; }
+	public Configuration Configuration { get; private set; }
+	public ILoggerFactory LoggerFactory { get; private set; }
+	protected ILogger Logger { get; private set; }
 
 	// Locale related properties
 	public LocaleInfo CurrentLocale { get; private set; }
@@ -135,7 +135,7 @@ public class LocalizationManager
 		}
 	}
 
-	// Be careful registering delegated tp this event. It may hold a reference to your object, preventing its finalization.
+	// Be careful registering delegated to this event. It may hold a reference to your object, preventing its finalization.
 	// Do not provide an event delegate from a class instance which can be disposed during the program lifetime.
 	// Instead, an instance of  ILocalizationTarget can be registered to receive locale change events.
 	public event LocalizationChangeEventHandler? LocalizationChanged;

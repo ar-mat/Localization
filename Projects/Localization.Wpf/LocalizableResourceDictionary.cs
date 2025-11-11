@@ -479,7 +479,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 				rd.Add(enumerator.Key, enumerator.Value);
 
 			// write in-memory xml
-			MemoryStream ms = new();
+			using MemoryStream ms = new();
 			XamlWriter.Save(rd, ms);
 			ms.Seek(0, SeekOrigin.Begin);
 
@@ -495,7 +495,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			xmlDoc.Load(ms);
 			XmlElement? rootElement = xmlDoc.DocumentElement;
 			if (rootElement != null)
-				EnsureToHaveWriteFullEndElementForClosingTags(rootElement);
+				VerifyFullElementTags(rootElement);
 			xmlDoc.Save(fw);
 		}
 		catch (Exception ex)
@@ -504,9 +504,9 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			throw;
 		}
 
-		static void EnsureToHaveWriteFullEndElementForClosingTags(XmlElement element)
+		static void VerifyFullElementTags(XmlElement element)
 		{
-			// setting IsEmpty = false forces to write full XML end elements instead of teh short "/>" ending
+			// setting IsEmpty = false forces to write full XML end elements instead of the short "/>" ending
 			// this is required for System.Windows.Markup.XamlReader.Load to succeeded
 			element.IsEmpty = false;
 
@@ -514,7 +514,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			foreach (XmlNode node in element.ChildNodes)
 			{
 				if (node is XmlElement childElement)
-					EnsureToHaveWriteFullEndElementForClosingTags(childElement);
+					VerifyFullElementTags(childElement);
 			}
 		}
 	}

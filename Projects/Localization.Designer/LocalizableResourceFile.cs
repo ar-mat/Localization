@@ -153,11 +153,8 @@ public class LocalizableResourceFile
 
 	public ILocalizableResource? GetResourceTranslation(LocaleInfo locale)
 	{
-#pragma warning disable IDE0270 // Use coalesce expression
-		LocalizationManager? lm = LocalizationManager;
-		if (lm == null)
-			throw new InvalidOperationException("Localizable Resource File is not loaded");
-#pragma warning restore IDE0270 // Use coalesce expression
+		LocalizationManager lm = LocalizationManager
+			?? throw new InvalidOperationException("Localizable Resource File is not loaded");
 
 #pragma warning disable IDE0018 // Inline variable declaration
 		ILocalizableResource? dict;

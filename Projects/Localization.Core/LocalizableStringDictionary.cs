@@ -173,8 +173,10 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 	// String dictionary additions
 	public String GetValueOrDefault(String key, String defaultValue)
 	{
-		String? result = this[key];
-		return result ?? defaultValue;
+		if (TryGetValue(key, out String? result))
+			return result;
+
+		return defaultValue;
 	}
 
 	// helper method to form a localizable resource Uri from the appropriate code behind type
