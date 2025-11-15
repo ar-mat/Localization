@@ -201,7 +201,12 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 				return String.Empty;
 
 			if (uri.IsAbsoluteUri)
+			{
+				if (uri.IsFile)
+					return uri.LocalPath;// uri.OriginalString;
+
 				return uri.AbsolutePath;
+			}
 
 			return uri.OriginalString;
 		}
@@ -215,7 +220,7 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 		if (!uri.IsAbsoluteUri)
 			return String.Empty;
 
-		return uri.AbsolutePath;
+		return uri.IsFile? uri.LocalPath : uri.AbsolutePath;
 	}
 	public Stream? GetNativeResourceStream()
 	{
@@ -358,8 +363,8 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 		}
 		else
 		{
-			Logger.LogError("LocalizableResourceDictionary Source Uri {xamlFileName} is not formatted correctly", xamlFileName);
-			throw new FileNotFoundException("LocalizableResourceDictionary Source Uri is not formatted correctly", xamlFileName);
+			Logger.LogError("LocalizableStringDictionary Source Uri {xamlFileName} is not formatted correctly", xamlFileName);
+			throw new FileNotFoundException("LocalizableStringDictionary Source Uri is not formatted correctly", xamlFileName);
 		}
 
 		// append translation file extension
@@ -505,7 +510,7 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 			Logger.LogWarning("Cannot load translation from invalid locale {locale}", locale.Name);
 			//throw new ArgumentException($"Cannot load translation from invalid locale {locale.Name}", nameof(locale));
 
-			ResetTranslationForKays(Keys, loadBehavior);
+			ResetTranslationForKeys(Keys, loadBehavior);
 			return false;
 		}
 
@@ -526,7 +531,7 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 			Logger.LogWarning("Translation file {xamlFileName} is not found", xamlFileName);
 			//throw new ArgumentException($"Translation file {xamlFileName} is not found for locale {locale.Name}", nameof(locale));
 
-			ResetTranslationForKays(Keys, loadBehavior);
+			ResetTranslationForKeys(Keys, loadBehavior);
 			return false;
 		}
 
@@ -565,7 +570,7 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 			}
 
 			// process skipped keys as described by loadBehavior
-			ResetTranslationForKays(unusedKeys, loadBehavior);
+			ResetTranslationForKeys(unusedKeys, loadBehavior);
 		}
 		catch (Exception ex)
 		{
@@ -573,7 +578,7 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 			throw;
 		}
 	}
-	private void ResetTranslationForKays(IEnumerable<String> keys, TranslationLoadBehavior loadBehavior)
+	private void ResetTranslationForKeys(IEnumerable<String> keys, TranslationLoadBehavior loadBehavior)
 	{
 		if (loadBehavior == TranslationLoadBehavior.ClearNative)
 		{

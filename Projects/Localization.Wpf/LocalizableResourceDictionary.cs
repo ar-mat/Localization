@@ -129,7 +129,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 
 			// create the logger if not created yet
 			if (Logger == NullLogger.Instance)
-				Logger = _locMgr.LoggerFactory.CreateLogger<LocalizableStringDictionary>();
+				Logger = _locMgr.LoggerFactory.CreateLogger<LocalizableResourceDictionary>();
 		}
 	}
 
@@ -189,7 +189,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			if (uri.IsAbsoluteUri)
 			{
 				if (uri.IsFile)
-					return uri.OriginalString;
+					return uri.LocalPath;// uri.OriginalString;
 
 				return uri.AbsolutePath;
 			}
@@ -362,7 +362,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			Logger.LogWarning("Cannot load translation from invalid locale {locale}", locale.Name);
 			//throw new ArgumentException($"Cannot load translation from invalid locale {locale.Name}", nameof(locale));
 
-			ResetTranslationForKays(Keys, loadBehavior);
+			ResetTranslationForKeys(Keys, loadBehavior);
 			return false;
 		}
 
@@ -383,7 +383,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			Logger.LogWarning("Translation file {xamlFileName} is not found", xamlFileName);
 			//throw new ArgumentException($"Translation file {xamlFileName} is not found for locale {locale.Name}", nameof(locale));
 
-			ResetTranslationForKays(Keys, loadBehavior);
+			ResetTranslationForKeys(Keys, loadBehavior);
 			return false;
 		}
 
@@ -419,7 +419,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			}
 
 			// process skipped keys as described by loadBehavior
-			ResetTranslationForKays(unusedKeys, loadBehavior);
+			ResetTranslationForKeys(unusedKeys, loadBehavior);
 		}
 		catch (Exception ex)
 		{
@@ -427,7 +427,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			throw;
 		}
 	}
-	private void ResetTranslationForKays(IEnumerable keys, TranslationLoadBehavior loadBehavior)
+	private void ResetTranslationForKeys(IEnumerable keys, TranslationLoadBehavior loadBehavior)
 	{
 		if (loadBehavior == TranslationLoadBehavior.ClearNative)
 		{

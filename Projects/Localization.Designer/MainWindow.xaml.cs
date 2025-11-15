@@ -413,7 +413,8 @@ public partial class MainWindow : Window
 					Header = tableCol.Caption,
 					HeaderTemplate = (DataTemplate)Resources["TranslationsColumnHeaderDataTemplate"],
 					HeaderStyle = (Style)Resources["TranslationsDataGridColumnHeaderStyle"],
-					Binding = new Binding() { Path = new PropertyPath(tableCol.ColumnName) },
+					// IMPORTANT: Use bracket notation to support names like "en-US"
+					Binding = new Binding() { Path = new PropertyPath("[" + tableCol.ColumnName + "]") },
 					ElementStyle = (Style)Resources["TranslationsDataGridReaderStyle"],
 					EditingElementStyle = (Style)Resources["TranslationsDataGridEditorStyle"]
 				};
@@ -660,7 +661,7 @@ public partial class MainWindow : Window
 
 				Guid localizableFileId = (Guid)dataRow[table.ResourceFileIdColumn.Ordinal];
 				String resourceKey = (String)dataRow[table.ResourceKeyColumn.Ordinal];
-				String resourceValue = dataRow.IsNull(column) ? string.Empty : (String)dataRow[column];
+				String resourceValue = dataRow.IsNull(column) ? String.Empty : (String)dataRow[column];
 				KeyValuePair<String, String> transRecord = new(resourceKey, resourceValue);
 
 				if (!mapChangesPerFile.TryGetValue(localizableFileId, out listTranslations))
