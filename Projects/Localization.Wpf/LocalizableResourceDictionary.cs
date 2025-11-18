@@ -431,12 +431,12 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 	{
 		if (loadBehavior == TranslationLoadBehavior.ClearNative)
 		{
-			foreach (String key in keys)
+			foreach (Object key in keys)
 				this[key] = String.Empty;
 		}
 		else if (loadBehavior == TranslationLoadBehavior.RemoveNative)
 		{
-			foreach (String key in keys)
+			foreach (Object key in keys)
 				Remove(key);
 		}
 	}
