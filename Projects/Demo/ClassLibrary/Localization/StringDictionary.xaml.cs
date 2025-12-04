@@ -25,7 +25,7 @@ internal class StringDictionary
 	}
 	public static StringDictionary CreateDefaultInstance()
 	{
-		return _instance ??= new StringDictionary();
+		return new StringDictionary();
 	}
 
 	public LocalizableStringDictionary LocalizedStrings { get; init; }
