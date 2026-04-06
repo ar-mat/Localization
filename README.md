@@ -151,7 +151,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Built with ❤️ by [Ara Petrosyan](https://github.com/ar-mat)
+- Built by [Ara Petrosyan](https://github.com/ar-mat)
 - Inspired by the need for simple yet powerful localization tools
 - Thanks to all contributors and users of the library
 
