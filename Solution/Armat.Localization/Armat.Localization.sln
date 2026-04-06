@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.3.11527.330 d18.3
+VisualStudioVersion = 18.3.11527.330
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Localization.Core", "..\..\Projects\Localization.Core\Localization.Core.csproj", "{97F80B55-BAEE-476D-A044-A6AEAE726F95}"
 EndProject
@@ -26,8 +26,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepositoryRootDir", "RepositoryRootDir", "{2F4DC772-F712-450C-91B7-5225F33E5094}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\CONTRIBUTING.md = ..\..\CONTRIBUTING.md
-		..\..\LICENSE = ..\..\LICENSE
 		..\..\README.md = ..\..\README.md
+		..\..\LICENSE.txt = ..\..\LICENSE.txt
 	EndProjectSection
 EndProject
 Global
