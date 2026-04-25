@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 
 namespace Armat.Localization.Designer;
@@ -20,9 +21,13 @@ public class TranslationsTable : DataTable
 
 	public const Int32 FixedColumnsCount = 4;
 
+	[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 	public DataColumn ResourceFileIdColumn { get; init; }
+	[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 	public DataColumn ResourceFileNameColumn { get; init; }
+	[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 	public DataColumn ResourceKeyColumn { get; init; }
+	[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 	public DataColumn NativeValueColumn { get; init; }
 
 	public void CreateLocaleColumns(IEnumerable<LocalizableResourceFile> allFiles)

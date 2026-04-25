@@ -16,6 +16,7 @@ using System.Windows.Media;
 using Binding = System.Windows.Data.Binding;
 using ComboBox = System.Windows.Controls.ComboBox;
 using DataFormats = System.Windows.DataFormats;
+using DataGrid = System.Windows.Controls.DataGrid;
 using DataObject = System.Windows.DataObject;
 using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
