@@ -4,8 +4,8 @@
     <s:String x:Key="TextBox_AutoTranslatedValue">Текст будет переведен автоматически.</s:String>
     <s:String x:Key="Btn_ShowPopup">Показать окно</s:String>
     <s:String x:Key="Lbl_TypeText">Введите текст сюда</s:String>
-    <s:String x:Key="Lbl_SelectLanguage">Выбрать язик</s:String>
-    <s:String x:Key="App_Title">Армат Локализация Wpf демонстартивная программа</s:String>
+    <s:String x:Key="Lbl_SelectLanguage">Выбрать язык</s:String>
+    <s:String x:Key="App_Title">Армат Локализация Wpf демонстрационная программа</s:String>
     <s:String x:Key="Lbl_ManuallyTranslated">Ручной перевод</s:String>
     <s:String x:Key="Btn_ShowMessage">Показать сообщение</s:String>
 </ResourceDictionary>

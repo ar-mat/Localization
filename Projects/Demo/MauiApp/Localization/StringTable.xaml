@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<lm:LocalizableResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                                    x:Class="Armat.Localization.Demo.Localization.StringTable"
+								    xmlns:lm="clr-namespace:Armat.Localization.Maui;assembly=armat.localization.maui"
+									xmlns:s="clr-namespace:System;assembly=netstandard">
+
+	<s:String x:Key="AppShell_Title">Armat Localization Wpf Demo App</s:String>
+	<s:String x:Key="MainPage_Title">Main Page</s:String>
+	<s:String x:Key="Lbl_SelectLanguage">Select Language</s:String>
+	<s:String x:Key="Lbl_HelloWorld">Hello World!</s:String>
+	<s:String x:Key="Img_DotNetBot_Description">dot net bot in a submarine number ten</s:String>
+	<s:String x:Key="Lbl_WelcomeMessage">Welcome to .NET Multi-platform App UI</s:String>
+	<s:String x:Key="Btn_ClickMe">Click me</s:String>
+	<s:String x:Key="Btn_ClickMe_Hint">Counts the number of times you click</s:String>
+	<s:String x:Key="Btn_ClickMe_Counter">Clicked {0} times</s:String>
+	
+</lm:LocalizableResourceDictionary>

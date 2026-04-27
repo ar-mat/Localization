@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<lm:LocalizableResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                                    x:Class="Armat.Localization.Demo.Localization.StringTable"
+								    xmlns:lm="clr-namespace:Armat.Localization.Maui;assembly=armat.localization.maui"
+									xmlns:s="clr-namespace:System;assembly=netstandard">
+
+	<s:String x:Key="AppShell_Title">Армат Локализация Maui демонстрационная программа</s:String>
+	<s:String x:Key="MainPage_Title">Главная страница</s:String>
+	<s:String x:Key="Lbl_SelectLanguage">Выбрать язык</s:String>
+	<s:String x:Key="Lbl_HelloWorld">Привет, мир!</s:String>
+	<s:String x:Key="Img_DotNetBot_Description">dot net bot в подводной лодке номер десять</s:String>
+	<s:String x:Key="Lbl_WelcomeMessage">Добро пожаловать в .NET Multi-platform App UI</s:String>
+	<s:String x:Key="Btn_ClickMe">Нажми меня</s:String>
+	<s:String x:Key="Btn_ClickMe_Hint">Считает количество нажатий</s:String>
+	<s:String x:Key="Btn_ClickMe_Counter">Нажато {0} раз</s:String>
+
+</lm:LocalizableResourceDictionary>

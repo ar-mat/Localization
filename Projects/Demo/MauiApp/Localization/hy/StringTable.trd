@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<lm:LocalizableResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                                    x:Class="Armat.Localization.Demo.Localization.StringTable"
+								    xmlns:lm="clr-namespace:Armat.Localization.Maui;assembly=armat.localization.maui"
+									xmlns:s="clr-namespace:System;assembly=netstandard">
+
+	<s:String x:Key="AppShell_Title">Արմատ տեղայնացում Maui ցուցադրական ծրագիր</s:String>
+	<s:String x:Key="MainPage_Title">Գլխավոր Էջ</s:String>
+	<s:String x:Key="Lbl_SelectLanguage">Ընտրել լեզուն</s:String>
+	<s:String x:Key="Lbl_HelloWorld">Բարև աշխարհ!</s:String>
+	<s:String x:Key="Img_DotNetBot_Description">dot net bot-ը համար տասը սուզանավի մեջ է</s:String>
+	<s:String x:Key="Lbl_WelcomeMessage">Բարի գալուստ .NET Multi-platform App UI</s:String>
+	<s:String x:Key="Btn_ClickMe">Սեղմեք ինձ</s:String>
+	<s:String x:Key="Btn_ClickMe_Hint">Հաշվում է, թե քանի անգամ եք սեղմել</s:String>
+	<s:String x:Key="Btn_ClickMe_Counter">Սեղմվել է {0} անգամ</s:String>
+
+</lm:LocalizableResourceDictionary>

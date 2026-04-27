@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 x:Class="MauiApp.MainPage"
+			 xmlns:lm="clr-namespace:Armat.Localization.Maui;assembly=armat.localization.maui">
+
+	<ContentPage.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<lm:LocalizableResourceDictionary x:Name="_rdStringTable" Source="/Localization/StringTable.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</ContentPage.Resources>
+
+	<ScrollView>
+        <VerticalStackLayout
+            Padding="30,0"
+            Spacing="25">
+            <Image
+                Source="dotnet_bot.png"
+                HeightRequest="185"
+                Aspect="AspectFit"
+                SemanticProperties.Description="{DynamicResource Img_DotNetBot_Description}" />
+
+            <Label
+                Text="{DynamicResource Lbl_HelloWorld}"
+                Style="{StaticResource Headline}"
+                SemanticProperties.HeadingLevel="Level1" />
+
+            <Label
+                Text="{DynamicResource Lbl_WelcomeMessage}"
+                Style="{StaticResource SubHeadline}"
+                SemanticProperties.HeadingLevel="Level2"
+                SemanticProperties.Description="{DynamicResource Lbl_WelcomeMessage}" />
+
+            <Button
+                x:Name="CounterBtn"
+                Text="{DynamicResource Btn_ClickMe}" 
+                SemanticProperties.Hint="{DynamicResource Btn_ClickMe_Hint}"
+                Clicked="OnCounterClicked"
+                HorizontalOptions="Fill" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

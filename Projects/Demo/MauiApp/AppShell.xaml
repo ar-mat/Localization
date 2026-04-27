@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="MauiApp.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:MauiApp"
+	xmlns:l="clr-namespace:Armat.Localization;assembly=armat.localization.core"
+	xmlns:lm="clr-namespace:Armat.Localization.Maui;assembly=armat.localization.maui"
+    Title="{DynamicResource AppShell_Title}">
+
+	<Shell.Resources>
+		<ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <lm:LocalizableResourceDictionary Source="/Localization/StringTable.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</Shell.Resources>
+
+	<Shell.TitleView>
+	   <Grid ColumnDefinitions="*,Auto,Auto" HorizontalOptions="Fill">
+			<Label
+				Text="{DynamicResource MainPage_Title}"
+				HorizontalOptions="Start"
+				VerticalOptions="Center" />
+			<Label
+				Grid.Column="1"
+				Text="{DynamicResource Lbl_SelectLanguage}"
+				VerticalOptions="Center"
+				Margin="0,0,4,0" />
+			<Picker
+					Grid.Column="2"
+					WidthRequest="140"
+					ItemsSource="{Binding AllLocales, Source={RelativeSource AncestorType={x:Type local:AppShell}}}"
+					SelectedItem="{Binding CurrentLocale, Source={RelativeSource AncestorType={x:Type local:AppShell}}, Mode=TwoWay}"
+					ItemDisplayBinding="{Binding DisplayName}"
+					HorizontalOptions="End"
+					VerticalOptions="Center" />
+		</Grid>
+	</Shell.TitleView>
+
+	<ShellContent
+		ContentTemplate="{DataTemplate local:MainPage}"
+		Route="MainPage" />
+
+</Shell>

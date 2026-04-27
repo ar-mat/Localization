@@ -36,13 +36,8 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 	{
 	}
 	public LocalizableResourceDictionary(Uri source, LocalizationManager locManager)
+		: this()
 	{
-		Logger = NullLogger.Instance;
-		TranslationsDirRelativePath = String.Empty;
-
-		_currLocale = LocaleInfo.Invalid;
-		_loadedLocale = LocaleInfo.Invalid;
-
 		Source = source;
 
 		// register string dictionary in localization manager to receive further localization change events
@@ -60,7 +55,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 		this.EndInit();
 
 		// in case there's a non-native locale selected in Localization Manager, OnLocalizationChanged will be triggered
-		// upon _locMgr.Targets.Add() and LoadLocalized will be called with the appropriate Locale
+		// upon _locMgr.Targets.Add() and LoadTranslation will be called with the appropriate Locale
 		if (_locMgr == null)
 			LocalizationManager = LocalizationManager.Default;
 
@@ -96,7 +91,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 	public String[] NativeFileExtensions => _nativeFileExtArray;
 
 	// Represents list of supported extensions for localizable file translations
-	// tsd = translated resource dictionary
+	// trd = translated resource dictionary
 	private const String _transFileExt = "trd";
 	private static readonly String[] _transFileExtArray = new String[] { _transFileExt };
 	public static String TranslationFileExtension => _transFileExt;
@@ -152,7 +147,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 				LoadNative();
 			}
 
-			// check if localization has changed after LoadLocalized
+			// check if localization has changed after LoadTranslation
 			if (_currLocale != args.NewLocale)
 				Logger.LogWarning("Localization change didn't happen");
 		}
@@ -197,28 +192,6 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			return uri.OriginalString;
 		}
 	}
-	//public String GetNativeFilePath()
-	//{
-	//    String xamlFileName = ResourceFilePath;
-	//    if (xamlFileName == null)
-	//        return String.Empty;
-
-	//    return GetNativeFilePath(xamlFileName);
-	//}
-	//private String GetNativeFilePath(String xamlFileName)
-	//{
-	//    LocalizationManager lm = LocalizationManager;
-
-	//    // normalize directory separator chars
-	//    xamlFileName = xamlFileName.Replace('/', Path.DirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);
-
-	//    // remove the starting root path - make it relative to the locMgr.Configuration.RuntimeDirectoryPath
-	//    String rootPath = lm.Configuration.RuntimeDirectoryPath.Replace('/', Path.DirectorySeparatorChar);
-	//    if (rootPath.Length > 0 && xamlFileName.StartsWith(rootPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-	//        xamlFileName = xamlFileName[(rootPath.Length + 1)..];
-
-	//    return xamlFileName;
-	//}
 	public String GetTranslationFilePath(LocaleInfo locale)
 	{
 		String xamlFileName = ResourceFilePath;
@@ -257,7 +230,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			xamlFileName = Path.Combine(TranslationsDirRelativePath, xamlFileName);
 		}
 
-		// remove the starting root path - make it relative to the locMgr.Configuration.RuntimeDirectoryPath
+		// remove the starting root path - make it relative to the locMgr.Configuration.TranslationsDirectoryPath
 		String rootPath = lm.Configuration.TranslationsDirectoryPath.Replace('/', Path.DirectorySeparatorChar);
 		if (rootPath.Length > 0 && xamlFileName.StartsWith(rootPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
 			xamlFileName = xamlFileName[(rootPath.Length + 1)..];
@@ -330,7 +303,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 	}
 	public void LoadNative()
 	{
-		Uri uri = Source;
+		Uri? uri = Source;
 		if (uri != null)
 			Source = new Uri(uri.OriginalString, uri.IsAbsoluteUri ? UriKind.Absolute : UriKind.Relative);
 
@@ -360,7 +333,6 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 		if (!locale.IsValid)
 		{
 			Logger.LogWarning("Cannot load translation from invalid locale {locale}", locale.Name);
-			//throw new ArgumentException($"Cannot load translation from invalid locale {locale.Name}", nameof(locale));
 
 			ResetTranslationForKeys(Keys, loadBehavior);
 			return false;
@@ -381,14 +353,13 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 		if (!locFileInfo.Exists)
 		{
 			Logger.LogWarning("Translation file {xamlFileName} is not found", xamlFileName);
-			//throw new ArgumentException($"Translation file {xamlFileName} is not found for locale {locale.Name}", nameof(locale));
 
 			ResetTranslationForKeys(Keys, loadBehavior);
 			return false;
 		}
 
 		// load from translation file
-		LoadTranslation(locFileInfo, LocalizationManager.Configuration.TranslationLoadBehavior);
+		LoadTranslation(locFileInfo, loadBehavior);
 
 		// save the loaded locale info
 		_loadedLocale = _currLocale;
@@ -429,14 +400,16 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 	}
 	private void ResetTranslationForKeys(IEnumerable keys, TranslationLoadBehavior loadBehavior)
 	{
+		Object[] keyArray = keys.OfType<Object>().ToArray();
+	
 		if (loadBehavior == TranslationLoadBehavior.ClearNative)
 		{
-			foreach (Object key in keys)
+			foreach (Object key in keyArray)
 				this[key] = String.Empty;
 		}
 		else if (loadBehavior == TranslationLoadBehavior.RemoveNative)
 		{
-			foreach (Object key in keys)
+			foreach (Object key in keyArray)
 				Remove(key);
 		}
 	}
@@ -446,7 +419,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 	{
 		// ensure the current locale is set
 		// this will save current localization dictionary into the right file
-		if (CurrentLocale == null || !CurrentLocale.IsValid)
+		if (!CurrentLocale.IsValid)
 		{
 			Logger.LogWarning("No locale is loaded to save the translation for");
 			throw new InvalidOperationException("No locale is loaded to save the translation for");

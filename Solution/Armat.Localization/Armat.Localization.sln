@@ -32,6 +32,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepositoryRootDir", "Reposi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Localization.Maui", "..\..\Projects\Localization.Maui\Localization.Maui.csproj", "{D31347F3-0ADC-4DB2-A840-B5E144481690}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MauiApp", "..\..\Projects\Demo\MauiApp\MauiApp.csproj", "{DF503943-6DB6-415E-86EC-84676A8F2456}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -114,6 +116,18 @@ Global
 		{D31347F3-0ADC-4DB2-A840-B5E144481690}.Release|x64.Build.0 = Release|Any CPU
 		{D31347F3-0ADC-4DB2-A840-B5E144481690}.Release|x86.ActiveCfg = Release|Any CPU
 		{D31347F3-0ADC-4DB2-A840-B5E144481690}.Release|x86.Build.0 = Release|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Debug|x64.Build.0 = Debug|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Debug|x86.Build.0 = Debug|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Release|x64.ActiveCfg = Release|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Release|x64.Build.0 = Release|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Release|x86.ActiveCfg = Release|Any CPU
+		{DF503943-6DB6-415E-86EC-84676A8F2456}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -121,6 +135,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{6237B41A-617B-4658-AC3B-3FD683507265} = {5C9E8078-0C59-4D01-9C3A-BA3FFEAF9138}
 		{BCC6F7E0-8BA7-4489-84B3-0C406E542492} = {5C9E8078-0C59-4D01-9C3A-BA3FFEAF9138}
+		{DF503943-6DB6-415E-86EC-84676A8F2456} = {5C9E8078-0C59-4D01-9C3A-BA3FFEAF9138}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B1EA6B3B-AE5B-4D95-AC31-BD4F80570B07}

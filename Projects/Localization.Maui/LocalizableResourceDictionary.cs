@@ -9,6 +9,7 @@ using System.Linq;
 using System.Xml;
 
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Controls.Internals;
 using Microsoft.Maui.Controls.Xaml;
 
 namespace Armat.Localization.Maui;
@@ -22,6 +23,11 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 
 		_currLocale = LocaleInfo.Invalid;
 		_loadedLocale = LocaleInfo.Invalid;
+
+		// MAUI does not call ISupportInitialize.EndInit() for ResourceDictionary subclasses.
+		// Subscribe to ValuesChanged: it fires when MAUI finishes loading the native XAML content,
+		// which is the reliable post-initialization hook for ResourceDictionary subclasses.
+		((IResourceDictionary)this).ValuesChanged += OnNativeValuesLoaded;
 	}
 	public LocalizableResourceDictionary(String sourceUri)
 		: this(new Uri(sourceUri, UriKind.RelativeOrAbsolute), LocalizationManager.Default)
@@ -50,6 +56,22 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 	}
 	void ISupportInitialize.EndInit()
 	{
+		// EndInit is not called by MAUI for ResourceDictionary objects.
+		// Initialization is handled via IResourceDictionary.ValuesChanged in the constructor.
+	}
+
+	// Fired by MAUI when the native XAML content is first loaded into this dictionary.
+	// Used as the post-initialization hook since EndInit() is not called in MAUI.
+	private Boolean _initialized = false;
+	private void OnNativeValuesLoaded(Object? sender, ResourcesChangedEventArgs e)
+	{
+		if (_initialized)
+			return;
+		_initialized = true;
+
+		// unsubscribe after first call - we only need initialization once
+		((IResourceDictionary)this).ValuesChanged -= OnNativeValuesLoaded;
+
 		// in case there's a non-native locale selected in Localization Manager, OnLocalizationChanged will be triggered
 		// upon _locMgr.Targets.Add() and LoadTranslation will be called with the appropriate Locale
 		if (_locMgr == null)
@@ -128,7 +150,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 	private LocaleInfo _currLocale;
 	private LocaleInfo _loadedLocale;
 	public LocaleInfo CurrentLocale => _currLocale;
-	public void OnLocalizationChanged(LocalizationManager locManager, LocalizationChangeEventArgs args)
+	void ILocalizationTarget.OnLocalizationChanged(LocalizationManager locManager, LocalizationChangeEventArgs args)
 	{
 		if (_currLocale != args.NewLocale && locManager == LocalizationManager)
 		{
@@ -152,10 +174,20 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 	// String dictionary additions
 	public T GetValueOrDefault<T>(String key, T defaultValue)
 	{
-		if (TryGetValue(key, out Object? value) && value is T result)
-			return result;
+		T result;
 
-		return defaultValue;
+		try
+		{
+			result = (T)this[key];
+			result ??= defaultValue;
+		}
+		catch (Exception ex)
+		{
+			Logger.LogWarning(ex, "Failed to retrieve value for key {key}", key);
+			result = defaultValue;
+		}
+
+		return result;
 	}
 
 	// native and translation file paths
@@ -195,7 +227,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			// ensure to have only the xaml file path in xamlFileName
 			Int32 pathSepIndex = xamlFileName.LastIndexOf(';');
 			if (pathSepIndex != -1)
-				xamlFileName = xamlFileName[(pathSepIndex + 1)..];
+				xamlFileName = xamlFileName[..pathSepIndex];
 			if (xamlFileName.StartsWith("component/"))
 				xamlFileName = xamlFileName.Remove(0, "component/".Length);
 
