@@ -16,7 +16,6 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 	public LocalizableStringDictionary()
 	{
 		Logger = NullLogger.Instance;
-		TranslationsDirRelativePath = String.Empty;
 
 		_currLocale = LocaleInfo.Invalid;
 		_loadedLocale = LocaleInfo.Invalid;
@@ -36,7 +35,6 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 	public LocalizableStringDictionary(Uri source, LocalizationManager locManager)
 	{
 		Logger = NullLogger.Instance;
-		TranslationsDirRelativePath = String.Empty;
 
 		_currLocale = LocaleInfo.Invalid;
 		_loadedLocale = LocaleInfo.Invalid;
@@ -74,13 +72,6 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 
 	// the logger to be used for this class
 	protected ILogger Logger { get; private set; }
-
-	// path to the translations directory relative to the runtime directory
-	// Use this property in case the translations directory is not being determined automatically
-	public String TranslationsDirRelativePath
-	{
-		get; set;
-	}
 
 	// Represents list of supported extensions for localizable files in native language
 	// nsd = native string dictionary
@@ -275,66 +266,38 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 	{
 		LocalizationManager lm = LocalizationManager;
 
-		// by default, it will try to locate the translation directory path based on assumption that assembly name matches the default namespace name of assembly
-		if (TranslationsDirRelativePath.Length == 0)
+		// ensure to have only the xaml file path in xamlFileName
+		Int32 pathSepIndex = xamlFileName.LastIndexOf(';');
+		String assemblyName = String.Empty;
+
+		if (pathSepIndex != -1)
 		{
-			// ensure to have only the xaml file path in xamlFileName
-			Int32 pathSepIndex = xamlFileName.LastIndexOf(';');
-			String assemblyName = String.Empty;
-
-			if (pathSepIndex != -1)
-			{
-				assemblyName = xamlFileName[..pathSepIndex].TrimStart('/');
-				xamlFileName = xamlFileName[(pathSepIndex + 1)..];
-			}
-			if (xamlFileName.StartsWith("component/"))
-			{
-				xamlFileName = xamlFileName.Remove(0, "component/".Length);
-
-				// also try to remove the assembly name - considering it coincides with the default namespace
-				if (assemblyName.Length > 0 && xamlFileName.StartsWith(assemblyName + '.', StringComparison.OrdinalIgnoreCase))
-					xamlFileName = xamlFileName.Remove(0, assemblyName.Length + 1);
-
-				// replace all '.'-s with '/'-s without the last one (excluding the file extension)
-				Char[] arrFileNameChars = xamlFileName.ToCharArray();
-				Int32 dirSepIndex = Array.LastIndexOf(arrFileNameChars, '.');
-				Boolean isLast = true;
-				while (dirSepIndex != -1)
-				{
-					if (!isLast)
-						arrFileNameChars[dirSepIndex] = Path.DirectorySeparatorChar;
-					else
-						isLast = false;
-
-					dirSepIndex = Array.LastIndexOf(arrFileNameChars, '.', dirSepIndex - 1);
-				}
-				xamlFileName = new String(arrFileNameChars);
-			}
+			assemblyName = xamlFileName[..pathSepIndex].TrimStart('/');
+			xamlFileName = xamlFileName[(pathSepIndex + 1)..];
 		}
-		else
+		if (xamlFileName.StartsWith("component/"))
 		{
-			// use translations directory path is specified explicitly
+			xamlFileName = xamlFileName.Remove(0, "component/".Length);
 
-			// get the localizable file name without directory information
-			String localizableFileName;
-			Int32 dirSepIndex = xamlFileName.LastIndexOf('.');
+			// also try to remove the assembly name - considering it coincides with the default namespace
+			if (assemblyName.Length > 0 && xamlFileName.StartsWith(assemblyName + '.', StringComparison.OrdinalIgnoreCase))
+				xamlFileName = xamlFileName.Remove(0, assemblyName.Length + 1);
 
-			if (dirSepIndex != -1)
+			// replace all '.'-s with '/'-s without the last one (excluding the file extension)
+			Char[] arrFileNameChars = xamlFileName.ToCharArray();
+			Int32 dirSepIndex = Array.LastIndexOf(arrFileNameChars, '.');
+			Boolean isLast = true;
+			while (dirSepIndex != -1)
 			{
-				dirSepIndex = xamlFileName.LastIndexOf('.', dirSepIndex - 1);
-				if (dirSepIndex == -1)
-					localizableFileName = xamlFileName;
+				if (!isLast)
+					arrFileNameChars[dirSepIndex] = Path.DirectorySeparatorChar;
 				else
-					localizableFileName = xamlFileName[(dirSepIndex + 1)..];
-			}
-			else
-			{
-				localizableFileName = xamlFileName;
-			}
+					isLast = false;
 
-			// prepend the path
-			xamlFileName = Path.Combine(TranslationsDirRelativePath, localizableFileName);
-		}
+				dirSepIndex = Array.LastIndexOf(arrFileNameChars, '.', dirSepIndex - 1);
+			}
+			xamlFileName = new String(arrFileNameChars);
+		}		
 
 		// normalize directory separator chars
 		xamlFileName = xamlFileName.Replace('/', Path.DirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);

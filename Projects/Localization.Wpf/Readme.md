@@ -59,7 +59,6 @@ Represents a specialized `ResourceDictionary` that extends WPF's native dictiona
 ### Properties
 
 - `LocalizationManager` – assigns the manager that drives locale changes. The property can be set only once; setting it registers the dictionary as a target and creates a scoped logger.
-- `TranslationsDirRelativePath` – optional override for the translations directory relative to the runtime directory.
 - `CurrentLocale` – reports the locale currently applied to the dictionary.
 - `NativeFileExtensions` / `TranslationFileExtensions` – arrays describing supported native (`xaml`) and translated (`trd`) file extensions. Static `NativeFileExtension` and `TranslationFileExtension` expose the individual extensions.
 - `ResourceFilePath` – resolves the source URI to a file path or pack URI string, using `Source` or the XAML base URI.
@@ -70,7 +69,7 @@ Represents a specialized `ResourceDictionary` that extends WPF's native dictiona
 - `CanLoadNative(Uri sourceUri)` – validates that a file-based source contains a `LocalizableResourceDictionary` root element before loading.
 - `LoadNative()` – reloads the native dictionary from the current `Source` and resets the loaded locale to native.
 - `LoadNative(Uri sourceUri, LocalizationManager localizationManager)` – loads native content from the specified URI while registering with the given manager.
-- `GetTranslationFilePath(LocaleInfo locale)` – composes the absolute path to the translation file for a locale, respecting `TranslationsDirRelativePath` and the manager configuration.
+- `GetTranslationFilePath(LocaleInfo locale)` – composes the absolute path to the translation file for a locale, respecting the manager configuration.
 - `LoadTranslation(String localeName)` / `LoadTranslation(LocaleInfo locale)` – loads translations for the locale. Returns `false` when the locale is invalid or the translation file is missing, and applies `TranslationLoadBehavior` to unmatched keys.
 - `SaveTranslation()` – persists the current contents to the locale-specific `.trd` file, ensuring WPF-compatible XML formatting.
 - `CreateTranslation(LocaleInfo locale)` – creates an empty translation file and parent directories when they do not already exist.

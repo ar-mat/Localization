@@ -11,6 +11,7 @@ using System.Xml;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Internals;
 using Microsoft.Maui.Controls.Xaml;
+using Microsoft.Maui.Storage;
 
 namespace Armat.Localization.Maui;
 
@@ -19,7 +20,6 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 	public LocalizableResourceDictionary()
 	{
 		Logger = NullLogger.Instance;
-		TranslationsDirRelativePath = String.Empty;
 
 		_currLocale = LocaleInfo.Invalid;
 		_loadedLocale = LocaleInfo.Invalid;
@@ -93,13 +93,6 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 
 	// the logger to be used for this class
 	protected ILogger Logger { get; private set; }
-
-	// path to the translations directory relative to the runtime directory
-	// Use this property in case the translations directory is not being determined automatically
-	public String TranslationsDirRelativePath
-	{
-		get; set;
-	}
 
 	// Represents list of supported extensions for localizable files in native language
 	// xaml = (nsd = native resource dictionary)
@@ -210,6 +203,52 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			return uri.OriginalString;
 		}
 	}
+	public String GetTranslationAssetPath(LocaleInfo locale)
+	{
+		String xamlFileName = ResourceFilePath;
+		if (String.IsNullOrEmpty(xamlFileName))
+			return String.Empty;
+
+		return GetTranslationAssetPath(xamlFileName, locale);
+	}
+	public String GetTranslationAssetPath(String xamlFileName, LocaleInfo locale)
+	{
+		// strip pack URI components
+		Int32 pathSepIndex = xamlFileName.LastIndexOf(';');
+		if (pathSepIndex != -1)
+			xamlFileName = xamlFileName[..pathSepIndex];
+		if (xamlFileName.StartsWith("component/"))
+			xamlFileName = xamlFileName.Remove(0, "component/".Length);
+
+		// normalize to forward slashes and strip leading slash
+		xamlFileName = xamlFileName.Replace('\\', '/').TrimStart('/');
+
+		// remove rootPath prefix (e.g. "Localization")
+		String rootPath = LocalizationManager.Configuration.TranslationsDirectoryPath.Replace('\\', '/').TrimStart('/');
+		if (rootPath.Length > 0 && xamlFileName.StartsWith(rootPath + "/", StringComparison.OrdinalIgnoreCase))
+			xamlFileName = xamlFileName[(rootPath.Length + 1)..];
+
+		// swap native extension for translation extension
+		if (xamlFileName.EndsWith("." + NativeFileExtension, StringComparison.OrdinalIgnoreCase))
+		{
+			xamlFileName = xamlFileName[..^(NativeFileExtension.Length + 1)];
+		}
+		else
+		{
+			Logger.LogError("LocalizableResourceDictionary Source Uri {xamlFileName} is not formatted correctly", xamlFileName);
+			throw new FileNotFoundException("LocalizableResourceDictionary Source Uri is not formatted correctly", xamlFileName);
+		}
+		if (TranslationFileExtension.Length > 0)
+			xamlFileName += "." + TranslationFileExtension;
+
+		// prepend locale name to match MauiAsset LogicalName = "%(RecursiveDir)%(Filename)%(Extension)"
+		xamlFileName = locale.Name + "/" + xamlFileName;
+
+		// prepend the translations directory path from localization manager
+		xamlFileName = LocalizationManager.Configuration.TranslationsDirectoryPath + "/" + xamlFileName;
+
+		return xamlFileName;
+	}
 	public String GetTranslationFilePath(LocaleInfo locale)
 	{
 		String xamlFileName = ResourceFilePath;
@@ -222,31 +261,15 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 	{
 		LocalizationManager lm = LocalizationManager;
 
-		if (TranslationsDirRelativePath.Length == 0)
-		{
-			// ensure to have only the xaml file path in xamlFileName
-			Int32 pathSepIndex = xamlFileName.LastIndexOf(';');
-			if (pathSepIndex != -1)
-				xamlFileName = xamlFileName[..pathSepIndex];
-			if (xamlFileName.StartsWith("component/"))
-				xamlFileName = xamlFileName.Remove(0, "component/".Length);
+		// ensure to have only the xaml file path in xamlFileName
+		Int32 pathSepIndex = xamlFileName.LastIndexOf(';');
+		if (pathSepIndex != -1)
+			xamlFileName = xamlFileName[..pathSepIndex];
+		if (xamlFileName.StartsWith("component/"))
+			xamlFileName = xamlFileName.Remove(0, "component/".Length);
 
-			// normalize directory separator chars
-			xamlFileName = xamlFileName.Replace('/', Path.DirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);
-		}
-		else
-		{
-			// normalize directory separator chars
-			xamlFileName = xamlFileName.Replace('/', Path.DirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);
-
-			// get the localizable file name without directory information
-			Int32 dirSepIndex = xamlFileName.LastIndexOf(Path.DirectorySeparatorChar);
-			if (dirSepIndex != -1)
-				xamlFileName = xamlFileName[(dirSepIndex + 1)..];
-
-			// prepend the path
-			xamlFileName = Path.Combine(TranslationsDirRelativePath, xamlFileName);
-		}
+		// normalize directory separator chars
+		xamlFileName = xamlFileName.Replace('/', Path.DirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);
 
 		// remove the starting root path - make it relative to the locMgr.Configuration.TranslationsDirectoryPath
 		String rootPath = lm.Configuration.TranslationsDirectoryPath.Replace('/', Path.DirectorySeparatorChar);
@@ -359,43 +382,60 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 		// update the locale info field
 		_currLocale = locale;
 
-		String xamlFileName = GetTranslationFilePath(locale);
-		if (String.IsNullOrEmpty(xamlFileName))
+		Stream? stream = null;
+
+		// try to open as a MAUI app package asset (Android / iOS / Mac)
+		String assetPath = GetTranslationAssetPath(locale);
+		if (assetPath.Length > 0)
 		{
-			Logger.LogWarning("Failed to compose name of translation file for locale {locale}", locale.Name);
-			throw new ArgumentException($"Failed to compose name of translation file for locale {locale.Name}", nameof(locale));
+			try
+			{
+				stream = FileSystem.OpenAppPackageFileAsync(assetPath).GetAwaiter().GetResult();
+			}
+			catch
+			{
+			}
 		}
 
-		// get the localization file
-		FileInfo locFileInfo = new(xamlFileName);
-		if (!locFileInfo.Exists)
+		if (stream == null)
 		{
-			Logger.LogWarning("Translation file {xamlFileName} is not found", xamlFileName);
+			// fall back to the file system (Windows)
+			String xamlFileName = GetTranslationFilePath(locale);
+			if (String.IsNullOrEmpty(xamlFileName))
+			{
+				Logger.LogWarning("Failed to compose name of translation file for locale {locale}", locale.Name);
+				throw new ArgumentException($"Failed to compose name of translation file for locale {locale.Name}", nameof(locale));
+			}
 
-			ResetTranslationForKeys(Keys, loadBehavior);
-			return false;
+			FileInfo locFileInfo = new(xamlFileName);
+			if (!locFileInfo.Exists)
+			{
+				Logger.LogWarning("Translation file {xamlFileName} is not found", xamlFileName);
+
+				ResetTranslationForKeys(Keys, loadBehavior);
+				return false;
+			}
+
+			stream = locFileInfo.OpenRead();
 		}
 
-		// load from translation file
-		LoadTranslation(locFileInfo, loadBehavior);
+		using (stream)
+			LoadTranslation(stream, loadBehavior);
 
 		// save the loaded locale info
 		_loadedLocale = _currLocale;
 
 		return true;
 	}
-	private void LoadTranslation(FileInfo locFileInfo, TranslationLoadBehavior loadBehavior)
+	private void LoadTranslation(Stream stream, TranslationLoadBehavior loadBehavior)
 	{
 		try
 		{
-			// open file stream
-			using FileStream fs = locFileInfo.OpenRead();
-
 			// set of unused keys
 			HashSet<String> unusedKeys = Keys.ToHashSet(StringComparer.Ordinal);
 
 			// load localized resource dictionary
-			using StreamReader sr = new(fs);
+			using StreamReader sr = new(stream);
 			ResourceDictionary dicLocalized = new ResourceDictionary().LoadFromXaml(sr.ReadToEnd());
 
 			// iterate by resources / update
@@ -411,7 +451,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 		}
 		catch (Exception ex)
 		{
-			Logger.LogError(ex, "Translation file {LocalizationFileName} loading failed", locFileInfo.FullName);
+			Logger.LogError(ex, "Translation stream loading failed");
 			throw;
 		}
 	}

@@ -89,6 +89,10 @@ public class LocalizationManager
 	{
 		get
 		{
+			// check whether the supported locales are defined in the configuration
+			if (Configuration.SupportedLocales != null)
+				return Configuration.SupportedLocales;
+
 			DirectoryInfo? locRootDirInfo = GetTranslationsDirectory();
 			if (locRootDirInfo == null || !locRootDirInfo.Exists)
 				return Array.Empty<LocaleInfo>();

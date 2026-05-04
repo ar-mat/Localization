@@ -30,6 +30,9 @@ public partial class MainPage : ContentPage
 
 	private void OnLocaleChanged(Object sender, LocalizationChangeEventArgs e)
 	{
+		if (count == 0)
+			return;
+
 		CounterBtn.Text = GetClickMeCounterText(_rdStringTable, count);
 
 		SemanticScreenReader.Announce(CounterBtn.Text);

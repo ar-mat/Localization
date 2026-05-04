@@ -77,6 +77,7 @@
 		 <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		 <TargetPath>%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
 	 </None>
+	 <MauiAsset Include="Localization\**\*.trd" LogicalName="Localization\%(RecursiveDir)%(Filename)%(Extension)" />
  </ItemGroup>
 
 	<ItemGroup>

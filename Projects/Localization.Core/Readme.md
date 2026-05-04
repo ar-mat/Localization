@@ -113,7 +113,6 @@ Represents a type derived from `Dictionary<String, String>` of key-value pairs t
 **Properties:**
 - `LocalizationManager` property attaches the string dictionary to a localization manager. Cannot be reset once set.
 - `Source` property is used to load the native resource file at a given `Uri`. Setting it triggers auto-loading if the resource file path is available.
-- `TranslationsDirRelativePath` property holds the path to translations directory override.
 - `CurrentLocale` property represents the `LocaleInfo` currently loaded in the string dictionary.
 - `NativeFileExtensions` and `TranslationFileExtensions` properties define supported file extensions ("xaml" for native files, "tsd" for translation files).
 - `NativeFileExtension` and `TranslationFileExtension` static properties provide the individual extension strings.
