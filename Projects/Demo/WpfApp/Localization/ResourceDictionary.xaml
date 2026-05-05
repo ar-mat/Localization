@@ -7,6 +7,7 @@
 	<s:String x:Key="Lbl_SelectLanguage">Select Language</s:String>
 	<s:String x:Key="Lbl_TypeText">Type text here</s:String>
 	<s:String x:Key="Lbl_ManuallyTranslated">Manually Translated</s:String>
+	<s:String x:Key="Lbl_NestedDirText">Nested Directory Text</s:String>
 	<s:String x:Key="TextBox_AutoTranslatedValue">The text will be translated automatically.</s:String>
 	<s:String x:Key="Btn_ShowPopup">Show Popup</s:String>
 	<s:String x:Key="Btn_ShowWarning">Show Warning</s:String>

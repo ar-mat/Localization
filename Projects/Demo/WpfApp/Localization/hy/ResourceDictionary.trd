@@ -7,5 +7,6 @@
     <s:String x:Key="Lbl_SelectLanguage">Ընտրել լեզուն</s:String>
     <s:String x:Key="App_Title">Արմատ տեղայնացում Wpf ցուցադրական ծրագիր</s:String>
     <s:String x:Key="Lbl_ManuallyTranslated">Ձեռքի թարգմանություն</s:String>
+	<s:String x:Key="Lbl_NestedDirText">Ներքին թղթապանակի տեքստ</s:String>
     <s:String x:Key="Btn_ShowMessage">Ցույցադրել հաղորդագրություն</s:String>
 </ResourceDictionary>

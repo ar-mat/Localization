@@ -31,6 +31,8 @@
 			<RowDefinition Height="auto"/>
 			<RowDefinition Height="20"/>
 			<RowDefinition Height="auto"/>
+			<RowDefinition Height="20"/>
+			<RowDefinition Height="auto"/>
 			<RowDefinition Height="*"/>
 			<RowDefinition Height="auto"/>
 		</Grid.RowDefinitions>
@@ -68,8 +70,15 @@
 				VerticalContentAlignment="Center" Grid.Row="4" Grid.Column="2"
 				Click="OnInfoMessageButtonClick" />
 
+		<Label Content="{DynamicResource Lbl_NestedDirText}" 
+			   VerticalContentAlignment="Top" Grid.Row="7" Grid.Column="0"/>
+		<StackPanel Grid.Row="7" Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top">
+			<Label Content="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=NestedText1, FallbackValue='Nested Text 1'}" Margin="0,0,10,0"/>
+			<Label Content="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=NestedText2, FallbackValue='Nested Text 2'}" Margin="0,0,10,0"/>
+		</StackPanel>
+
 		<Button Content="{DynamicResource Btn_Close}"
-				VerticalContentAlignment="Center" Grid.Row="6" Grid.Column="2"
+				VerticalContentAlignment="Center" Grid.Row="8" Grid.Column="2"
 				Click="OnClose" />
 	</Grid>
 

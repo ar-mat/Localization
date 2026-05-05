@@ -33,4 +33,8 @@ public static class ClassFromLibrary
 
 		return String.Empty;
 	}
+
+	private static Localization.NestedDir.MoreStrings _moreStrings = new();
+	public static String MoreString1 => _moreStrings.FirstString;
+	public static String MoreString2 => _moreStrings.SecondString;
 }

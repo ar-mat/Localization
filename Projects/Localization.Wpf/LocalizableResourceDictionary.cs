@@ -268,6 +268,11 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			// verify document element name
 			if (!xr.LocalName.Equals("LocalizableResourceDictionary", StringComparison.InvariantCultureIgnoreCase))
 				return false;
+
+			// verify xmlns - default namespace must be the WPF presentation namespace
+			String? defaultNs = xr.GetAttribute("xmlns");
+			if (!String.Equals(defaultNs, "http://schemas.microsoft.com/winfx/2006/xaml/presentation", StringComparison.OrdinalIgnoreCase))
+				return false;
 		}
 		catch (Exception ex)
 		{

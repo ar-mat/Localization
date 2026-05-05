@@ -1,0 +1,7 @@
+﻿<LocalizableStringDictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+							 xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+	<String Key="Key_String_1" Value="Какой то текст на русском"/>
+	<String Key="Key_String_2" Value="Это должно быть переведено на другие языки"/>
+
+</LocalizableStringDictionary>

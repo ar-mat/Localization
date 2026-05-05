@@ -6,5 +6,6 @@ public enum LocalizableResourceType : Int32
 {
 	Unknown,
 	StringDictionary,
-	WpfResourceDictionary
+	WpfResourceDictionary,
+	MauiResourceDictionary
 }

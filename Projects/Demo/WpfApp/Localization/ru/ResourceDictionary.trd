@@ -7,5 +7,6 @@
     <s:String x:Key="Lbl_SelectLanguage">Выбрать язык</s:String>
     <s:String x:Key="App_Title">Армат Локализация Wpf демонстрационная программа</s:String>
     <s:String x:Key="Lbl_ManuallyTranslated">Ручной перевод</s:String>
+	<s:String x:Key="Lbl_NestedDirText">Текст из вложенной директории</s:String>
     <s:String x:Key="Btn_ShowMessage">Показать сообщение</s:String>
 </ResourceDictionary>

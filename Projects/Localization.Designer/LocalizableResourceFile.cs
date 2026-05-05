@@ -45,6 +45,7 @@ public class LocalizableResourceFile
 			LocalizableResourceType.Unknown => "/Resources/LocalizableResourceType_Unknown.png",
 			LocalizableResourceType.StringDictionary => "/Resources/LocalizableResourceType_SD.png",
 			LocalizableResourceType.WpfResourceDictionary => "/Resources/LocalizableResourceType_WPF.png",
+			LocalizableResourceType.MauiResourceDictionary => "/Resources/LocalizableResourceType_MAUI.png",
 			_ => throw new InvalidOperationException()
 		};
 	}
@@ -115,6 +116,12 @@ public class LocalizableResourceFile
 			if (LocalizableResource != null)
 				ResourceType = LocalizableResourceType.WpfResourceDictionary;
 		}
+		if (ResourceType == LocalizableResourceType.Unknown)
+		{
+			LocalizableResource = TryLoadMauiResourceDictionary(resourceFilePath, LocalizationManager);
+			if (LocalizableResource != null)
+				ResourceType = LocalizableResourceType.MauiResourceDictionary;
+		}
 
 		return ResourceType != LocalizableResourceType.Unknown;
 	}
@@ -150,6 +157,22 @@ public class LocalizableResourceFile
 
 		return dict;
 	}
+	private static ILocalizableResource? TryLoadMauiResourceDictionary(String filePath, LocalizationManager localizationManager)
+	{
+		Uri resourceUri = new(filePath, UriKind.Absolute);
+
+		// create a localizable resource dictionary
+		LocalizableMauiResourceDictionary dict = new();
+
+		// ensure it has the right format
+		if (!dict.CanLoadNative(resourceUri))
+			return null;
+
+		// load it
+		dict.LoadNative(resourceUri, localizationManager);
+
+		return dict;
+	}
 
 	public ILocalizableResource? GetResourceTranslation(LocaleInfo locale)
 	{
@@ -169,6 +192,8 @@ public class LocalizableResourceFile
 			dict = TryLoadStringDictionary(FullPath, lm);
 		else if (ResourceType == LocalizableResourceType.WpfResourceDictionary)
 			dict = TryLoadWpfResourceDictionary(FullPath, lm);
+		else if (ResourceType == LocalizableResourceType.MauiResourceDictionary)
+			dict = TryLoadMauiResourceDictionary(FullPath, lm);
 		else
 			throw new InvalidOperationException("Localizable Resource File is not loaded");
 

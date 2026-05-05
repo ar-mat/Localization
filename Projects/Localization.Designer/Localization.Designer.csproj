@@ -52,6 +52,7 @@
 		
 		<Resource Include="Resources\LocalizableResourceType_Unknown.png" />
 		<Resource Include="Resources\LocalizableResourceType_SD.png" />
+		<Resource Include="Resources\LocalizableResourceType_MAUI.png" />
 		<Resource Include="Resources\LocalizableResourceType_WPF.png" />
 		<Resource Include="Resources\ToolbarScanDirectory.png" />
 		<Resource Include="Resources\ToolbarAddFiles.png" />

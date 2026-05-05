@@ -15,7 +15,7 @@ using Microsoft.Maui.Storage;
 
 namespace Armat.Localization.Maui;
 
-public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitialize, ILocalizationTarget, ILocalizableResource
+public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTarget, ILocalizableResource
 {
 	public LocalizableResourceDictionary()
 	{
@@ -48,16 +48,6 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 
 		// register string dictionary in localization manager to receive further localization change events
 		LocalizationManager = locManager;
-	}
-
-	// Implementation of System.ComponentModel.ISupportInitialize interface
-	void ISupportInitialize.BeginInit()
-	{
-	}
-	void ISupportInitialize.EndInit()
-	{
-		// EndInit is not called by MAUI for ResourceDictionary objects.
-		// Initialization is handled via IResourceDictionary.ValuesChanged in the constructor.
 	}
 
 	// Fired by MAUI when the native XAML content is first loaded into this dictionary.
@@ -333,6 +323,11 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			// verify document element name
 			if (!xr.LocalName.Equals("LocalizableResourceDictionary", StringComparison.InvariantCultureIgnoreCase))
 				return false;
+
+			// verify xmlns - default namespace must be the MAUI namespace
+			String? defaultNs = xr.GetAttribute("xmlns");
+			if (!String.Equals(defaultNs, "http://schemas.microsoft.com/dotnet/2021/maui", StringComparison.OrdinalIgnoreCase))
+				return false;
 		}
 		catch (Exception ex)
 		{
@@ -390,16 +385,17 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 		{
 			try
 			{
-				stream = FileSystem.OpenAppPackageFileAsync(assetPath).GetAwaiter().GetResult();
+				if (FileSystem.AppPackageFileExistsAsync(assetPath).GetAwaiter().GetResult())
+					stream = FileSystem.OpenAppPackageFileAsync(assetPath).GetAwaiter().GetResult();
 			}
 			catch
 			{
 			}
 		}
 
+		// fall back to the file system (Windows)
 		if (stream == null)
 		{
-			// fall back to the file system (Windows)
 			String xamlFileName = GetTranslationFilePath(locale);
 			if (String.IsNullOrEmpty(xamlFileName))
 			{

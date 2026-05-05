@@ -7,5 +7,6 @@
     <s:String x:Key="Lbl_SelectLanguage">Select Language</s:String>
     <s:String x:Key="App_Title">Armat Localization Wpf Demo App</s:String>
     <s:String x:Key="Lbl_ManuallyTranslated">Manually Translated</s:String>
+	<s:String x:Key="Lbl_NestedDirText">Nested Directory Text</s:String>
     <s:String x:Key="Btn_ShowMessage">Show Message</s:String>
 </ResourceDictionary>

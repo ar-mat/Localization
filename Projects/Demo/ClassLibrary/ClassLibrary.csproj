@@ -22,23 +22,36 @@
 
 	<ItemGroup>
 		<None Remove="Localization\StringDictionary.xaml" />
+		<None Remove="Localization\NestedDir\MoreStrings.xaml" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="Localization\StringDictionary.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</EmbeddedResource>
+		<EmbeddedResource Include="Localization\NestedDir\MoreStrings.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Update="Localization\en\NestedDir\MoreStrings.tsd">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="Localization\en\StringDictionary.tsd">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\hy\NestedDir\MoreStrings.tsd">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Localization\hy\StringDictionary.tsd">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Localization\ru\StringDictionary.tsd">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Localization\ru\NestedDir\MoreStrings.tsd">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
