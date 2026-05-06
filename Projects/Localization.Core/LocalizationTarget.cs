@@ -37,7 +37,7 @@ public interface ILocalizableResource
 	public String[] TranslationFileExtensions { get; }
 
 	// returns the source URI from where it has been loaded
-	Uri Source { get; }
+	Uri? Source { get; }
 
 	// Load / reload native language contents
 	void LoadNative(Uri sourceUri, LocalizationManager localizationManager);

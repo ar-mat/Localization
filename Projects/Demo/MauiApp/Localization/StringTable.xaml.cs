@@ -12,6 +12,7 @@ public partial class StringTable : LocalizableResourceDictionary
 {
 	public StringTable()
 	{
+		InitializeComponent();
 	}
 
 	//public String GetClickMeCounterText(Int32 count)

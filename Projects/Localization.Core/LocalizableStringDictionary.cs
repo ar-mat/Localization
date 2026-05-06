@@ -89,18 +89,18 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 
 	// The source of localizable dictionary
 	private Uri? _source = null;
-	public Uri Source
+	public Uri? Source
 	{
 		get
 		{
-			return _source ?? new Uri(String.Empty);
+			return _source;
 		}
 		set
 		{
 			_source = value;
 
 			// try to auto-load
-			if (ResourceFilePath.Length > 0)
+			if (_source == null || ResourceFilePath.Length > 0)
 				LoadNative();
 		}
 	}

@@ -97,6 +97,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiXaml Update="Localization\NestedRD\Dictionary1.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Localization\StringTable.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

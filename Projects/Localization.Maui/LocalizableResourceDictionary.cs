@@ -55,6 +55,12 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 	private Boolean _initialized = false;
 	private void OnNativeValuesLoaded(Object? sender, ResourcesChangedEventArgs e)
 	{
+		// ignore the event while the Source is not set
+		// this happens when the resource directory is instantiated in xaml, the elements are loaded before the Source is set
+		// we don't want to trigger the initialization logic at this point
+		if (Source == null)
+			return;
+
 		if (_initialized)
 			return;
 		_initialized = true;

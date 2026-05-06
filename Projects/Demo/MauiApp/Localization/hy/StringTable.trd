@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" >
     <s:String x:Key="Btn_ClickMe_Counter">Սեղմվել է {0} անգամ</s:String>
     <s:String x:Key="Lbl_SelectLanguage">Ընտրել լեզուն</s:String>
     <s:String x:Key="Btn_ClickMe_Hint">Հաշվում է, թե քանի անգամ եք սեղմել</s:String>

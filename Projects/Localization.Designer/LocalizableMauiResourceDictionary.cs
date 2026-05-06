@@ -42,7 +42,7 @@ internal class LocalizableMauiResourceDictionary : ILocalizableResource
 		_currLocale = LocaleInfo.Invalid;
 	}
 
-	public Uri Source => _mauiSource!;
+	public Uri? Source => _mauiSource;
 
 	public LocaleInfo CurrentLocale => _currLocale;
 
@@ -340,8 +340,31 @@ internal class LocalizableMauiResourceDictionary : ILocalizableResource
 	private static void ConvertMauiToWpf(String srcPath, String destPath)
 	{
 		String content = File.ReadAllText(srcPath);
-		String converted = SwitchNamespaces(content, mauiToWpf: true);
+		String converted = RemoveRootClassAttribute(content);
+		converted = SwitchNamespaces(converted, mauiToWpf: true);
 		File.WriteAllText(destPath, converted);
+	}
+
+	// Strips x:Class from the root element of the converted XAML.
+	// The MAUI source's x:Class points at a CLR type that isn't loaded in the Designer
+	// process, so leaving it in would make WPF's XamlReader fail when parsing the file.
+	private static String RemoveRootClassAttribute(String content)
+	{
+		XmlDocument doc = new();
+		doc.LoadXml(content);
+
+		XmlElement? root = doc.DocumentElement;
+		if (root == null)
+			return content;
+
+		if (!root.HasAttribute("Class", MauiXamlNs))
+			return content;
+
+		root.RemoveAttribute("Class", MauiXamlNs);
+
+		using StringWriter sw = new();
+		doc.Save(sw);
+		return sw.ToString();
 	}
 
 	private static void ConvertWpfToMaui(String srcPath, String destPath)
