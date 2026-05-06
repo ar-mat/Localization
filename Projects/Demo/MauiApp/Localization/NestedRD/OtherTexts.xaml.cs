@@ -1,10 +1,12 @@
+using Armat.Localization.Maui;
+
 using Microsoft.Maui.Controls;
 
 namespace Armat.Localization.Demo.Localization.NestedRD;
 
-public partial class Dictionary1 : ResourceDictionary
+public partial class OtherTexts : LocalizableResourceDictionary
 {
-	public Dictionary1()
+	public OtherTexts()
 	{
 		InitializeComponent();
 	}

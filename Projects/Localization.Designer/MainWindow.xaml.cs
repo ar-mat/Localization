@@ -602,7 +602,7 @@ public partial class MainWindow : Window
 	}
 	private static async Task<Boolean> SaveTranslationsTableAsync(IEnumerable<LocalizableResourceFile> localizableFiles, TranslationsTable table, Boolean saveChangesOnly, CancellationToken token)
 	{
-		return await Task.Run(() =>
+		Boolean result = await Task.Run(() =>
 		{
 			if (!_fileLoadSaveMutex.WaitOne())
 				return false;
@@ -616,6 +616,12 @@ public partial class MainWindow : Window
 				_fileLoadSaveMutex.ReleaseMutex();
 			}
 		}).ConfigureAwait(true);
+
+		// AcceptChanges must run on the UI thread (ConfigureAwait(true) above ensures we're back on it)
+		if (result)
+			table.AcceptChanges();
+
+		return result;
 	}
 	private static Boolean SaveTranslationsTableAsyncUnsafe(IEnumerable<LocalizableResourceFile> localizableFiles, TranslationsTable table, Boolean saveChangesOnly, CancellationToken token)
 	{
@@ -681,9 +687,6 @@ public partial class MainWindow : Window
 				file.SaveTranslations(locale, translations);
 			}
 		}
-
-		// mark table unchanged
-		table.AcceptChanges();
 
 		return true;
 	}

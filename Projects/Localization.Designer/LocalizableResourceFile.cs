@@ -29,7 +29,7 @@ public class LocalizableResourceFile
 	{
 		get => System.IO.Path.GetFileName(FullPath) ?? String.Empty;
 	}
-	public String DirectoryPath
+	public String TranslationsDirectoryPath
 	{
 		get => System.IO.Path.GetDirectoryName(FullPath) ?? String.Empty;
 	}
@@ -97,7 +97,7 @@ public class LocalizableResourceFile
 		Configuration cfg = new()
 		{
 			// use full file path, so it would be possible to locate the appropriate localization files
-			TranslationsDirectoryPath = DirectoryPath,
+			TranslationsDirectoryPath = TranslationsDirectoryPath,
 			TranslationLoadBehavior = TranslationLoadBehavior.ClearNative
 		};
 		LocalizationManager = LocalizationManager.CreateInstance(cfg);

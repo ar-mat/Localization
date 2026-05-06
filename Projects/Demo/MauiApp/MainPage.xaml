@@ -8,6 +8,7 @@
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
 				<lm:LocalizableResourceDictionary x:Name="_rdStringTable" Source="/Localization/StringTable.xaml" />
+				<lm:LocalizableResourceDictionary Source="/Localization/NestedRD/OtherTexts.xaml" />
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 	</ContentPage.Resources>
@@ -33,7 +34,13 @@
                 SemanticProperties.HeadingLevel="Level2"
                 SemanticProperties.Description="{DynamicResource Lbl_WelcomeMessage}" />
 
-            <Button
+			<Label
+                Text="{DynamicResource Some_Key}"
+                Style="{StaticResource SubHeadline}"
+                SemanticProperties.HeadingLevel="Level2"
+                SemanticProperties.Description="{DynamicResource Some_Key}" />
+
+			<Button
                 x:Name="CounterBtn"
                 Text="{DynamicResource Btn_ClickMe}" 
                 SemanticProperties.Hint="{DynamicResource Btn_ClickMe_Hint}"

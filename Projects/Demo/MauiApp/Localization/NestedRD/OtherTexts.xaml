@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<lm:LocalizableResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+								  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+								  x:Class="Armat.Localization.Demo.Localization.NestedRD.OtherTexts"
+								  xmlns:lm="clr-namespace:Armat.Localization.Maui;assembly=armat.localization.maui"
+								  xmlns:s="clr-namespace:System;assembly=netstandard">
+
+	<s:String x:Key="Some_Key">Some text...</s:String>
+
+</lm:LocalizableResourceDictionary>

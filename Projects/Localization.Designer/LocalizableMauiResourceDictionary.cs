@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Markup;
 using System.Xml;
@@ -348,23 +349,20 @@ internal class LocalizableMauiResourceDictionary : ILocalizableResource
 	// Strips x:Class from the root element of the converted XAML.
 	// The MAUI source's x:Class points at a CLR type that isn't loaded in the Designer
 	// process, so leaving it in would make WPF's XamlReader fail when parsing the file.
+	// Uses targeted text removal (not XmlDocument round-tripping) so the file's encoding,
+	// XML declaration, attribute order, and whitespace stay byte-for-byte identical.
+	// XAML places x:Class only on the root, so the first regex match is always the root.
+	private static readonly Regex _rootClassAttrRegex = new(
+		@"\s+x:Class\s*=\s*(""[^""]*""|'[^']*')",
+		RegexOptions.Compiled);
+
 	private static String RemoveRootClassAttribute(String content)
 	{
-		XmlDocument doc = new();
-		doc.LoadXml(content);
-
-		XmlElement? root = doc.DocumentElement;
-		if (root == null)
+		Match match = _rootClassAttrRegex.Match(content);
+		if (!match.Success)
 			return content;
 
-		if (!root.HasAttribute("Class", MauiXamlNs))
-			return content;
-
-		root.RemoveAttribute("Class", MauiXamlNs);
-
-		using StringWriter sw = new();
-		doc.Save(sw);
-		return sw.ToString();
+		return content.Remove(match.Index, match.Length);
 	}
 
 	private static void ConvertWpfToMaui(String srcPath, String destPath)

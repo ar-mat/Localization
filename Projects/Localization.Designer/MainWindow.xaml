@@ -192,7 +192,7 @@
                             <TextBlock Text="{DynamicResource TableFiles_FileNameColumnHeader}"/>
                         </DataGridTextColumn.Header>
                     </DataGridTextColumn>
-                    <DataGridTextColumn Binding="{Binding Path=DirectoryPath}" IsReadOnly="True" >
+					<DataGridTextColumn Binding="{Binding Path=TranslationsDirectoryPath}" IsReadOnly="True" >
                         <DataGridTextColumn.Header>
                             <TextBlock Text="{DynamicResource TableFiles_FileDirColumnHeader}"/>
                         </DataGridTextColumn.Header>

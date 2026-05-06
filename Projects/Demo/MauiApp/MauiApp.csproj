@@ -91,13 +91,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="Localization\NestedRD\OtherTexts.xaml.cs">
+	    <DependentUpon>OtherTexts.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Localization\StringTable.xaml.cs">
 	    <DependentUpon>StringTable.xaml</DependentUpon>
 	  </Compile>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <MauiXaml Update="Localization\NestedRD\Dictionary1.xaml">
+	  <MauiXaml Update="Localization\NestedRD\OtherTexts.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Localization\StringTable.xaml">
