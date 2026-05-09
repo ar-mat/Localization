@@ -37,11 +37,11 @@
 		<ApplicationTitle>MauiApp</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.mauiapp</ApplicationId>
+		<ApplicationId>com.armat.mauiapp</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>$(_ArmatLocalizationVersion)</ApplicationDisplayVersion>
+		<ApplicationVersion>2</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
@@ -51,6 +51,19 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+
+		<!-- Pin TargetPlatformVersion so the published NuGet package's lib folders are deterministic
+		     (e.g. lib/net10.0-ios26.0/) instead of inheriting whatever platform SDK the packing
+		     machine happens to have installed at pack time. Without these pins, an SDK upgrade on
+		     the packer's machine silently ratchets the package's lib folders to a newer version
+		     and locks out every consumer that hasn't installed the matching SDK
+		     (NU1202: package supports net10.0-iosXX.X, consumer is on net10.0-iosYY.Y, YY < XX).
+		     Lower these to broaden consumer compatibility once the matching workload manifests
+		     are installed via `dotnet workload install` with an explicit older version. -->
+		<TargetPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">26.0</TargetPlatformVersion>
+		<TargetPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">26.0</TargetPlatformVersion>
+		<TargetPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">36.0</TargetPlatformVersion>
+
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -63,7 +76,7 @@
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
 		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
-		
+
 		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*" />
 
@@ -71,41 +84,44 @@
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
- <ItemGroup>
-	 <None Update="Localization\**\*.trd">
-		 <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		 <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		 <TargetPath>%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
-	 </None>
-	 <MauiAsset Include="Localization\**\*.trd" LogicalName="Localization\%(RecursiveDir)%(Filename)%(Extension)" />
- </ItemGroup>
-
 	<ItemGroup>
+		
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.7" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)" />
+		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\..\Localization.Core\Localization.Core.csproj" />
+
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.maui" Version="$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)" />
+		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\..\Localization.Maui\Localization.Maui.csproj" />
+		
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Localization.Core\Localization.Core.csproj" />
-	  <ProjectReference Include="..\..\Localization.Maui\Localization.Maui.csproj" />
+		<None Update="Localization\**\*.trd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<TargetPath>%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+		</None>
+		<MauiAsset Include="Localization\**\*.trd" LogicalName="Localization\%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="Localization\NestedRD\OtherTexts.xaml.cs">
-	    <DependentUpon>OtherTexts.xaml</DependentUpon>
-	  </Compile>
-	  <Compile Update="Localization\StringTable.xaml.cs">
-	    <DependentUpon>StringTable.xaml</DependentUpon>
-	  </Compile>
+		<Compile Update="Localization\NestedRD\OtherTexts.xaml.cs">
+			<DependentUpon>OtherTexts.xaml</DependentUpon>
+		</Compile>
+		<Compile Update="Localization\StringTable.xaml.cs">
+			<DependentUpon>StringTable.xaml</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <MauiXaml Update="Localization\NestedRD\OtherTexts.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Localization\StringTable.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
+		<MauiXaml Update="Localization\NestedRD\OtherTexts.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Localization\StringTable.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 	</ItemGroup>
 
 </Project>

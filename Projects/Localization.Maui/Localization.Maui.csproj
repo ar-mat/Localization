@@ -31,18 +31,48 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+
+		<!-- Pin TargetPlatformVersion so the published NuGet package's lib folders are deterministic
+		     (e.g. lib/net10.0-ios26.0/) instead of inheriting whatever platform SDK the packing
+		     machine happens to have installed at pack time. Without these pins, an SDK upgrade on
+		     the packer's machine silently ratchets the package's lib folders to a newer version
+		     and locks out every consumer that hasn't installed the matching SDK
+		     (NU1202: package supports net10.0-iosXX.X, consumer is on net10.0-iosYY.Y, YY < XX).
+		     Lower these to broaden consumer compatibility once the matching workload manifests
+		     are installed via `dotnet workload install` with an explicit older version. -->
+		<TargetPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">26.0</TargetPlatformVersion>
+		<TargetPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">26.0</TargetPlatformVersion>
+		<TargetPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">36.0</TargetPlatformVersion>
+
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<Title>Armat Localization Maui Module</Title>
+		<Description>C# class library for developing localizable applications. Armat.Localization.Maui module contains LocalizableResourceDictionary to be used for MAUI applications.</Description>
+		<PackageIcon>AppIcon.png</PackageIcon>
+		<PackageTags>Localization Translation MultiLingual Language Culture MAUI</PackageTags>
+		<PackageReadmeFile>Readme.md</PackageReadmeFile>
+
+		<PackageVersion>$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)</PackageVersion>
+		<PackageProjectUrl>$(_ProjectWebpageUrl)</PackageProjectUrl>
+		<RepositoryUrl>$(_SourceCoreRepositoryRootUrl)</RepositoryUrl>
+		<RepositoryType>$(_SourceCoreRepositoryType)</RepositoryType>
+		<PackageLicenseExpression>$(_ProjectLicenseType)</PackageLicenseExpression>
+
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.7" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 
-		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(Version)$(_NugetVersionPostfix)" />
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)" />
 		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\Localization.Core\Localization.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="Readme.md">
+		<None Include="AppIcon.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="Readme.md">
 	    <PackagePath>\</PackagePath>
 	    <Pack>True</Pack>
 	  </None>

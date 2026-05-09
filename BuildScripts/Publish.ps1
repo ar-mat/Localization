@@ -5,7 +5,7 @@ param(
 )
 
 # define array of project names (default full set)
-$Projects = @("Localization.Core", "Localization.Wpf", "Localization.Designer")
+$Projects = @("Localization.Core", "Localization.Wpf", "Localization.Maui", "Localization.Designer")
 
 # If a specific project name was passed, limit list to that one
 if (![string]::IsNullOrWhiteSpace($ProjectName)) {

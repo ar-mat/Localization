@@ -14,12 +14,12 @@
 
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<Title>Armat Localization Wpf Module</Title>
-		<Description>C# class library for developing localizable applications. Armat.Localization.Wpf module contains LocalizableResourceDictionary to be used for wpf applications.</Description>
+		<Description>C# class library for developing localizable applications. Armat.Localization.Wpf module contains LocalizableResourceDictionary to be used for Wpf applications.</Description>
 		<PackageIcon>AppIcon.png</PackageIcon>
 		<PackageTags>Localization Translation MultiLingual Language Culture Wpf</PackageTags>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
 
-		<PackageVersion>$(Version)$(_NugetVersionPostfix)</PackageVersion>
+		<PackageVersion>$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)</PackageVersion>
 		<PackageProjectUrl>$(_ProjectWebpageUrl)</PackageProjectUrl>
 		<RepositoryUrl>$(_SourceCoreRepositoryRootUrl)</RepositoryUrl>
 		<RepositoryType>$(_SourceCoreRepositoryType)</RepositoryType>
@@ -31,7 +31,7 @@
 
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.7" />
 
-		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(Version)$(_NugetVersionPostfix)" />
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)" />
 		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\Localization.Core\Localization.Core.csproj" />
 
 	</ItemGroup>
@@ -41,7 +41,7 @@
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>
-		<None Update="Readme.md">
+		<None Include="Readme.md">
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>

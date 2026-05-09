@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<!-- Import common definitions -->
 	<Import Project="../Localization.Import.csproj" />
@@ -20,10 +20,10 @@
 		
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.7" />
 
-		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(Version)$(_NugetVersionPostfix)" />
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)" />
 		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\Localization.Core\Localization.Core.csproj" />
 
-		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.wpf" Version="$(Version)$(_NugetVersionPostfix)" />
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.wpf" Version="$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)" />
 		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\Localization.Wpf\Localization.Wpf.csproj" />
 		
 	</ItemGroup>

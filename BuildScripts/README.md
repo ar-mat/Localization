@@ -35,6 +35,9 @@ Creates NuGet packages for the core and WPF libraries.
 
 # Pack WPF library only  
 .\Pack.ps1 -ProjectName "Localization.Wpf"
+
+# Pack MAUI library only
+.\Pack.ps1 -ProjectName "Localization.Maui"
 ```
 
 **Parameters:**
@@ -49,6 +52,7 @@ Creates NuGet packages for the core and WPF libraries.
 **Generated Packages:**
 - `armat.localization.core.{version}.nupkg` - Core library
 - `armat.localization.wpf.{version}.nupkg` - WPF extensions
+- `armat.localization.maui.{version}.nupkg` - MAUI extensions
 
 ### Publish.ps1 - Application Publishing
 
@@ -66,6 +70,12 @@ Publishes applications with all dependencies for deployment.
 
 # Publish Core library only
 .\Publish.ps1 -ProjectName "Localization.Core"
+
+# Publish Wpf library only
+.\Publish.ps1 -ProjectName "Localization.Wpf"
+
+# Publish MAUI library only
+.\Publish.ps1 -ProjectName "Localization.Maui"
 ```
 
 **Parameters:**
@@ -80,4 +90,5 @@ Publishes applications with all dependencies for deployment.
 **Published Applications:**
 - `armat.localization.core` - Core library assemblies
 - `armat.localization.wpf` - WPF library assemblies  
+- `armat.localization.maui` - MAUI library assemblies  
 - `armat.localization.designer` - Complete Designer application

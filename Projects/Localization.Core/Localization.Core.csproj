@@ -18,7 +18,7 @@
 		<PackageTags>Localization Translation MultiLingual Language Culture Text</PackageTags>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
 
-		<PackageVersion>$(Version)$(_NugetVersionPostfix)</PackageVersion>
+		<PackageVersion>$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)</PackageVersion>
 		<PackageProjectUrl>$(_ProjectWebpageUrl)</PackageProjectUrl>
 		<RepositoryUrl>$(_SourceCoreRepositoryRootUrl)</RepositoryUrl>
 		<RepositoryType>$(_SourceCoreRepositoryType)</RepositoryType>

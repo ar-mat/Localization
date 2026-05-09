@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<!-- Import common definitions -->
 	<Import Project="../../Localization.Import.csproj" />
@@ -15,7 +15,7 @@
 
 	<ItemGroup>
 
-		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(Version)$(_NugetVersionPostfix)" />
+		<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)" />
 		<ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\..\Localization.Core\Localization.Core.csproj" />
 
 	</ItemGroup>
