@@ -25,13 +25,26 @@ public class LocalizableResourceFile
 
 	public LocalizationManager? LocalizationManager { get; private set; }
 
+	private String? _translationsDirectoryPath = null;
 	public String FileName
 	{
 		get => System.IO.Path.GetFileName(FullPath) ?? String.Empty;
 	}
 	public String TranslationsDirectoryPath
 	{
-		get => System.IO.Path.GetDirectoryName(FullPath) ?? String.Empty;
+		get
+		{
+			return _translationsDirectoryPath ??
+				System.IO.Path.GetDirectoryName(FullPath) ?? 
+				String.Empty;
+		}
+		private set
+		{
+			if (value.Length == 0)
+				_translationsDirectoryPath = null;
+			else
+				_translationsDirectoryPath = value;
+		}
 	}
 
 	public LocalizableResourceType ResourceType
@@ -84,13 +97,15 @@ public class LocalizableResourceFile
 		ResourceType = LocalizableResourceType.Unknown;
 		LocalizableResourceTranslations.Clear();
 	}
-	public Boolean Load(String resourceFilePath)
+	public Boolean Load(String resourceFilePath, String? translationsDirectoryPath = null)
 	{
 		// reset loaded contents
 		Reset();
 
 		// Set file path property
 		FullPath = resourceFilePath;
+		if (translationsDirectoryPath != null)
+			TranslationsDirectoryPath = translationsDirectoryPath;
 
 		// create an isolated localization manager for this file
 		// it will be used to load / save localizations for the current resource

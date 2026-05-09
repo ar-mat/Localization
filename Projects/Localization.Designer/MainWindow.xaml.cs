@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -145,7 +146,7 @@ public partial class MainWindow : Window
 		if (dlg.ShowDialog(this) != true)
 			return;
 
-		AddLocalizableResourceFiles(dlg.FileNames);
+		AddLocalizableResourceFiles(dlg.FileNames, null);
 	}
 
 	private void OnRemoveSelected(Object sender, ExecutedRoutedEventArgs e)
@@ -332,9 +333,9 @@ public partial class MainWindow : Window
 			SelectMany(ext => (IEnumerable<String>)System.IO.Directory.GetFiles(rootDirectoryPath, "*." + ext, System.IO.SearchOption.AllDirectories));
 
 		// add directory contents to the list
-		AddLocalizableResourceFiles(allFiles!);
+		AddLocalizableResourceFiles(allFiles!, rootDirectoryPath);
 	}
-	private void AddLocalizableResourceFiles(IEnumerable<String> filePaths)
+	private void AddLocalizableResourceFiles(IEnumerable<String> filePaths, String? rootDirectoryPath)
 	{
 		// check if there are any changes to apply back
 		SaveTranslationsTable();
@@ -347,9 +348,11 @@ public partial class MainWindow : Window
 
 			try
 			{
+				String? translationsDirectoryPath = DetectTranslationsDirectoryPath(path, rootDirectoryPath);
+
 				// add the file
 				LocalizableResourceFile file = new();
-				if (file.Load(path))
+				if (file.Load(path, translationsDirectoryPath))
 					LocalizableFiles.Add(file);
 			}
 			catch (Exception ex)
@@ -360,6 +363,52 @@ public partial class MainWindow : Window
 
 		// update columns based on the list of localizable files
 		UpdateTranslationsDataGridColumns();
+	}
+
+	private String? DetectTranslationsDirectoryPath(String filePath, String? rootDirectoryPath)
+	{
+		// 1. If rootDirectoryPath was not provided, locate the nearest ancestor
+		//    directory that contains a Visual Studio project file (*.csproj).
+		if (rootDirectoryPath == null)
+		{
+			System.IO.DirectoryInfo? ancestor = System.IO.Directory.GetParent(filePath);
+			while (ancestor != null)
+			{
+				if (ancestor.EnumerateFiles("*.csproj", System.IO.SearchOption.TopDirectoryOnly).Any())
+				{
+					rootDirectoryPath = ancestor.FullName;
+					break;
+				}
+				ancestor = ancestor.Parent;
+			}
+		}
+
+		// 2. Walk up from filePath looking for an ancestor directory named "Localization".
+		//    When rootDirectoryPath is set, the match must be at or below it (inclusive).
+		String localizationDirName = Configuration.Default.TranslationsDirectoryPath;
+
+		System.IO.DirectoryInfo? dir = System.IO.Directory.GetParent(filePath);
+		while (dir != null)
+		{
+			if (rootDirectoryPath != null && !IsSameOrDescendant(dir, rootDirectoryPath))
+				break;
+
+			if (String.Equals(dir.Name, localizationDirName, StringComparison.OrdinalIgnoreCase))
+				return dir.FullName;
+
+			dir = dir.Parent;
+		}
+
+		return null;
+	}
+
+	private static Boolean IsSameOrDescendant(System.IO.DirectoryInfo dir, String rootDirectoryPath)
+	{
+		String dirPath = dir.FullName.TrimEnd(System.IO.Path.DirectorySeparatorChar);
+		String rootPath = rootDirectoryPath.TrimEnd(System.IO.Path.DirectorySeparatorChar);
+
+		return dirPath.StartsWith(rootPath + System.IO.Path.DirectorySeparatorChar) &&
+			(dirPath.Length == rootPath.Length || dirPath[rootPath.Length] == System.IO.Path.DirectorySeparatorChar);
 	}
 
 	private void RemoveLocalizableResourceFiles(IEnumerable<LocalizableResourceFile> selectedFiles)
