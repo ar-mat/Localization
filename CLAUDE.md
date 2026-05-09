@@ -11,7 +11,7 @@ Top-level shape:
 - `Projects/Localization.Core/` — runtime-agnostic core library (`armat.localization.core`).
 - `Projects/Localization.Wpf/` — WPF `LocalizableResourceDictionary` (`armat.localization.wpf`, `net*-windows`, `UseWPF`).
 - `Projects/Localization.Maui/` — MAUI `LocalizableResourceDictionary` (`armat.localization.maui`, multi-targets `-android`, `-ios`, `-maccatalyst`, `-windows10.0.19041.0`).
-- `Projects/Localization.Designer/` — WPF + WinForms desktop translator GUI (`armat.localization.designer`).
+- `Projects/Localization.Designer/` — WPF + WinForms desktop translator GUI (`armat.localization.designer`). Now MAUI-aware.
 - `Projects/Demo/{ClassLibrary,WpfApp,MauiApp}/` — usage examples wired into the .sln.
 - `Projects/Localization.Import.csproj` — **shared MSBuild props imported by every project**. Not a buildable project. Edit this to bump version, change target framework, or change output paths globally (see "Shared build props" below).
 - `BuildScripts/` — PowerShell scripts; **run them from inside `BuildScripts/`** (they `cd ../Projects/<name>` relatively).
@@ -39,12 +39,14 @@ cd BuildScripts
 
 There are **no test projects** in this solution; `dotnet test` is a no-op.
 
+The MAUI library and demo require the MAUI workload installed: `dotnet workload install maui`.
+
 ## Shared build props (`Projects/Localization.Import.csproj`)
 
 Every csproj imports this. It centralizes:
 
-- `Version` (single source of truth for assembly + NuGet version; bump it here, not in individual csprojs).
-- `_DotNetVersion` — the **actual TFM in use is .NET 10** (`net10.0`), despite some Readmes still saying .NET 8. WPF/Designer projects extend it to `$(_DotNetVersion)-windows`; MAUI to `$(_DotNetVersion)-android` etc.
+- `Version` (single source of truth for assembly + NuGet version; bump it here, not in individual csprojs). Currently `2.1.0`.
+- `_DotNetVersion` — the **actual TFM is .NET 10** (`net10.0`). WPF/Designer projects extend it to `$(_DotNetVersion)-windows`; MAUI to `$(_DotNetVersion)-android`, `-ios`, `-maccatalyst`, and (on Windows hosts) `-windows10.0.19041.0`.
 - `OutputPath = $(SolutionDir)\..\..\bin\$(Configuration)` and `AppendTargetFrameworkToOutputPath=false` — this is why builds land in the single shared `bin/<Config>/` regardless of TFM. MAUI csprojs override `OutputPath` to keep per-TFM directories (otherwise multi-TFM outputs would clobber each other).
 - `Nullable=enable`, `ImplicitUsings=disable`, `EnforceCodeStyleInBuild=true`.
 
@@ -67,13 +69,13 @@ The runtime model is the same across Core / WPF / MAUI; only the resource contai
 
 **`LocalizationManager`** (Core) is a singleton-ish hub. `CreateDefaultInstance(...)` populates `LocalizationManager.Default` and **can only be called once** before anyone reads `Default`. It owns the `CurrentLocale`, fires `LocalizationChanged`, and holds a weakly-referenced `Targets` collection of `ILocalizationTarget` objects so disposed dictionaries clean up automatically.
 
-**Localizable containers** all implement `ILocalizationTarget` + `ILocalizableResource` and follow the same lifecycle: load native content from a `Source` URI, register with a `LocalizationManager`, then on `OnLocalizationChanged` reload `.tsd`/`.trd` translations from `<TranslationsDirectory>/<localeName>/<file>.<ext>`.
+**Localizable containers** all implement `ILocalizationTarget` + `ILocalizableResource` and follow the same lifecycle: load native content from a `Source` URI, register with a `LocalizationManager`, then on `OnLocalizationChanged` reload `.tsd`/`.trd` translations.
 
 | Container | Project | Native ext | Translation ext | Notes |
 |---|---|---|---|---|
 | `LocalizableStringDictionary` | Core | `.xaml` | `.tsd` | Plain `Dictionary<String,String>`, XML-serialized via `LocalizationDocument`. Works in any .NET app. |
 | `LocalizableResourceDictionary` (WPF) | Wpf | `.xaml` | `.trd` | Subclass of WPF `ResourceDictionary`. Use `{DynamicResource}` so locale switches re-resolve. |
-| `LocalizableResourceDictionary` (MAUI) | Maui | `.xaml` | `.trd` | Subclass of MAUI `ResourceDictionary`. **MAUI does NOT call `ISupportInitialize.EndInit()` on `ResourceDictionary` subclasses**, so initialization is hooked off the `IResourceDictionary.ValuesChanged` event instead — keep this if you touch init logic. |
+| `LocalizableResourceDictionary` (MAUI) | Maui | `.xaml` | `.trd` | Subclass of MAUI `ResourceDictionary`. **MAUI does NOT call `ISupportInitialize.EndInit()` on `ResourceDictionary` subclasses**, so initialization is hooked off the `IResourceDictionary.ValuesChanged` event instead. The handler also early-returns when `Source == null` so XAML-instantiated dictionaries don't run init prematurely. |
 
 **Translations directory layout** (resolved relative to `Configuration.TranslationsDirectoryPath`, typically `Localization/`):
 
@@ -87,16 +89,51 @@ Localization/
 
 `TranslationLoadBehavior` controls behavior for keys missing from a translation file: `KeepNative` (default), `ClearNative`, or `RemoveNative`.
 
+### MAUI translation file resolution
+
+The MAUI dictionary tries two sources in order during `LoadTranslation`:
+
+1. **App package asset** via `Microsoft.Maui.Storage.FileSystem.OpenAppPackageFileAsync(assetPath)`. This is what works on Android / iOS / Mac Catalyst, where the file system isn't directly accessible. The asset path is forward-slashed and **must** be prefixed with `Configuration.TranslationsDirectoryPath` — translation files have to be wired with `<MauiAsset Include="Localization\**\*.trd" LogicalName="Localization\%(RecursiveDir)%(Filename)%(Extension)" />` in the consuming MAUI csproj for that lookup to succeed.
+2. **File system** via the absolute path computed by `GetTranslationFilePath`. This is the Windows fall-back and the only path the Designer relies on.
+
+When `Configuration.SupportedLocales` isn't set, `LocalizationManager.AllLocales` falls back to scanning the translations directory — that scan can't see `MauiAsset`-packaged files at runtime, so MAUI apps almost always need to set `Configuration.SupportedLocales` explicitly (see `Projects/Demo/MauiApp/App.xaml.cs`).
+
+### Configuration recent changes
+
+- `Configuration` is now a **mutable record struct** (`set`, not `init`) with a new `SupportedLocales` property (`IEnumerable<LocaleInfo>?`). When non-null, `LocalizationManager.AllLocales` returns it directly instead of scanning the translations directory.
+- `ILocalizableResource.Source` is `Uri?` (nullable). Implementations may return null before `LoadNative` has been called.
+
 ## Designer app
 
-`Localization.Designer` is a WPF tool that scans projects for `.xaml` files containing `LocalizableStringDictionary` or `LocalizableResourceDictionary` roots, lets the user add/remove locales, and writes the matching `.tsd`/`.trd` files into the correct `<locale>/` subdirectories. It detects file format via root element (see `LocalizableResourceFile` / `LocalizableResourceType`). Recent work added MAUI-resource-dictionary support; the `TranslationsDirRelativePath` parameter on resource dictionaries was removed because it was untested/broken — don't reintroduce it without verifying non-Windows targets.
+`Localization.Designer` is a WPF tool that scans projects for `.xaml` files containing one of three root-element flavours:
+
+| Root element + namespace | Resource type |
+|---|---|
+| `LocalizableStringDictionary` | `LocalizableResourceType.StringDictionary` |
+| `LocalizableResourceDictionary` with `xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"` | `WpfResourceDictionary` |
+| `LocalizableResourceDictionary` with `xmlns="http://schemas.microsoft.com/dotnet/2021/maui"` | `MauiResourceDictionary` |
+
+The MAUI branch is implemented by `LocalizableMauiResourceDictionary` (Designer-internal). It wraps a `Wpf.LocalizableResourceDictionary` as `_innerDictionary` and:
+
+- On load: copies the source MAUI XAML into a temp file, swaps MAUI ↔ WPF XML namespaces (default ns, `xmlns:x`, library clr-namespace), strips the root `x:Class` attribute (regex-based, byte-preserving), then hands the temp file to `_innerDictionary.LoadNative`.
+- On translation load: reads the actual MAUI `.trd` (path computed locally because `_innerDictionary.Source` points at the temp file), namespace-swaps into a temp WPF file, parses with `XamlReader.Load`, merges into `_innerDictionary`.
+- On save / create: serializes `_innerDictionary` (or an empty dictionary) to a temp WPF XAML, swaps WPF → MAUI namespaces, writes the result to the target `.trd` path. The conversion is plain `String.Replace` of the three differing namespace URIs — longer/more-specific replaced first to avoid `xaml/presentation` being corrupted by the substring `xaml`.
+
+The `TranslationsDirRelativePath` parameter on resource dictionaries was removed earlier because it was untested/broken — don't reintroduce it without verifying non-Windows targets.
+
+`LocalizableResourceFile.Load(String resourceFilePath, String? translationsDirectoryPath = null)` takes an optional explicit translations directory. When omitted, it defaults to `Path.GetDirectoryName(FullPath)`. `MainWindow.DetectTranslationsDirectoryPath(filePath, rootDirectoryPath)` populates that argument by walking up the directory tree:
+
+1. If `rootDirectoryPath` is null, locate the nearest ancestor containing a `*.csproj` file.
+2. Walk up again from `filePath` looking for an ancestor named `Localization` (constant pulled from `Configuration.Default.TranslationsDirectoryPath`), constrained to the resolved `rootDirectoryPath`. The constraint helper is **strict-descendant** as currently written — `dir == root` returns false. Fine in practice (project roots aren't named `Localization`) but worth knowing.
 
 ## Wiring a localizable file in a consuming csproj
 
-Native `.xaml` files **must** be embedded resources (Core/MAUI) or WPF `Resource`/`Page`, and translation `.tsd`/`.trd` files **must** be `CopyToOutputDirectory=PreserveNewest`. The existing `Demo/*` csprojs are the canonical templates — copy their `<ItemGroup>`s when adding new localizable files.
+Native `.xaml` files **must** be embedded resources (Core / MAUI) or WPF `Resource`/`Page`, and translation `.tsd`/`.trd` files **must** be `CopyToOutputDirectory=PreserveNewest`. MAUI translation files additionally need `<MauiAsset Include="…" LogicalName="…" />` so they're packaged into the app bundle on Android / iOS / Mac Catalyst. The existing `Demo/*` csprojs are the canonical templates — copy their `<ItemGroup>`s when adding new localizable files.
 
-## Code style (from CONTRIBUTING.md)
+## Code style (full guide in `CONTRIBUTING.md`)
 
 - **Tabs** for indentation, **Allman** braces (open brace on its own line).
 - Private fields: `_camelCase`. Locals/params: `camelCase`. Types/methods/props: `PascalCase`.
-- Use BCL aliases — `String`, `Int32`, `Boolean` — not `string`/`int`/`bool`. Existing code is consistent on this.
+- Use BCL aliases — `String`, `Int32`, `Boolean`, `Object` — not `string`/`int`/`bool`. The codebase is fully consistent on this.
+- Comments are **plain `//` line comments**, lowercase first letter for in-method step descriptions, used for section headers above grouped members and for explaining *why* a non-obvious decision was made. XML doc comments are reserved for the auto-generated WPF code-behind partials (`/// Interaction logic for X.xaml`).
+- File-scoped namespaces, nullable reference types enabled.

@@ -1,277 +1,253 @@
-﻿# Armat Localization WPF
+# Armat Localization MAUI
 
-[![NuGet](https://img.shields.io/nuget/v/armat.localization.wpf.svg)](https://www.nuget.org/packages/armat.localization.wpf/)
-[![Downloads](https://img.shields.io/nuget/dt/armat.localization.wpf.svg)](https://www.nuget.org/packages/armat.localization.wpf/)
+[![NuGet](https://img.shields.io/nuget/v/armat.localization.maui.svg)](https://www.nuget.org/packages/armat.localization.maui/)
+[![Downloads](https://img.shields.io/nuget/dt/armat.localization.maui.svg)](https://www.nuget.org/packages/armat.localization.maui/)
 
-The `Armat.Localization.Wpf` library extends the core localization functionality specifically for WPF applications. It provides specialized support for WPF Resource Dictionaries, enabling seamless localization of WPF user interfaces with runtime language switching.
+The `Armat.Localization.Maui` library extends the core localization functionality for .NET MAUI applications. It plugs a `LocalizableResourceDictionary` into the MAUI XAML pipeline so any MAUI page or control can pull translated strings, brushes, styles, etc. through the standard `{DynamicResource}` markup, and switch language at runtime without restarting the app.
 
 ## 🚀 Installation
 
 Install via NuGet Package Manager:
 
 ```bash
-dotnet add package armat.localization.wpf
+dotnet add package armat.localization.maui
 ```
 
 Or via Package Manager Console:
 
 ```powershell
-Install-Package armat.localization.wpf
+Install-Package armat.localization.maui
 ```
 
 ## ✨ Features
 
-- **WPF Resource Dictionary Support** - Native integration with WPF ResourceDictionary
-- **Runtime UI Language Switching** - Change languages without application restart
-- **XAML Integration** - Direct usage in WPF XAML files
-- **Generic Value Retrieval** - Type-safe resource access with `GetValueOrDefault<T>`
-- **Automatic Translation Loading** - Seamless translation file management
-- **Comprehensive Logging** - Built-in logging support via Microsoft.Extensions.Logging.Abstractions
-- **Thread-Safe Operations** - Safe for multi-threaded WPF applications
+- **MAUI ResourceDictionary integration** — drop-in subclass of `Microsoft.Maui.Controls.ResourceDictionary`.
+- **Cross-platform asset loading** — translations read via `Microsoft.Maui.Storage.FileSystem` on Android / iOS / Mac Catalyst (packaged as `MauiAsset`), with automatic fall-back to the file system on Windows.
+- **Runtime UI language switching** — locale changes propagate through `LocalizationManager` and re-resolve every `{DynamicResource}` binding.
+- **XAML-first usage** — declare `<lm:LocalizableResourceDictionary Source="…" />` in any MAUI XAML and you're done.
+- **Type-safe resource access** — `GetValueOrDefault<T>(key, defaultValue)` for code-behind lookups.
+- **Same translation files as WPF** — `.xaml` for natives, `.trd` for translations; the Localization Designer recognizes both formats.
 
 ## Dependencies
 
-- **armat.localization.core** - Core localization functionality
-- **Microsoft.Extensions.Logging.Abstractions** - Logging support
-- **.NET 8.0-windows** - Windows-specific .NET 8.0 framework with WPF support
+- **armat.localization.core** — core localization functionality.
+- **Microsoft.Maui.Controls** — MAUI runtime.
+- **Microsoft.Extensions.Logging.Abstractions** — diagnostics.
+- **.NET 10** — multi-targets `net10.0-android`, `net10.0-ios`, `net10.0-maccatalyst`, and (on Windows) `net10.0-windows10.0.19041.0`.
 
-See more details about the core functionality in [Armat.Localization.Core](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Core).
+See the core API in [Armat.Localization.Core](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Core).
 
 ## `LocalizableResourceDictionary` class
 
-Represents a specialized `ResourceDictionary` that extends WPF's native dictionary with localization capabilities. Implements `ISupportInitialize`, `ILocalizationTarget`, and `ILocalizableResource` to integrate with `LocalizationManager` instances, manage translation files, and react to locale changes.
+Specialized `Microsoft.Maui.Controls.ResourceDictionary` that implements `ILocalizationTarget` and `ILocalizableResource`. When attached to a `LocalizationManager`, it reloads its contents whenever the active locale changes.
 
-`LocalizableResourceDictionary` can be instantiated from pack URIs or file paths. When attached to a `LocalizationManager`, it automatically reloads resources when the active locale changes.
+### MAUI initialization quirk
+
+Unlike WPF, **MAUI does not call `ISupportInitialize.EndInit()` on `ResourceDictionary` subclasses**. This library subscribes to `IResourceDictionary.ValuesChanged` to detect when MAUI has finished injecting the native XAML contents, then runs the post-init logic exactly once. Don't rely on `EndInit()` being invoked from MAUI XAML.
 
 ### File Extensions
 
-- **Native files**: `.xaml` – native resource dictionaries packaged with the application
-- **Translation files**: `.trd` – translated resource dictionaries stored per locale
+- **Native files**: `.xaml` — native resource dictionaries packaged with the application.
+- **Translation files**: `.trd` — translated resource dictionaries stored per-locale under `Localization/<localeName>/`.
 
 ### Constructors
 
-- `LocalizableResourceDictionary()` – creates an empty dictionary configured for localization
-- `LocalizableResourceDictionary(String sourceUri)` – loads from a URI using the default localization manager
-- `LocalizableResourceDictionary(String sourceUri, LocalizationManager locManager)` – loads from a URI using the supplied manager
-- `LocalizableResourceDictionary(Uri source)` – loads from a `Uri` instance using the default manager
-- `LocalizableResourceDictionary(Uri source, LocalizationManager locManager)` – loads from a `Uri` instance and registers with the supplied manager
+- `LocalizableResourceDictionary()` — empty dictionary; suitable for XAML instantiation.
+- `LocalizableResourceDictionary(String sourceUri)` — loads from a URI using the default localization manager.
+- `LocalizableResourceDictionary(String sourceUri, LocalizationManager locManager)` — loads from a URI using the supplied manager.
+- `LocalizableResourceDictionary(Uri source)` — loads from a `Uri` using the default manager.
+- `LocalizableResourceDictionary(Uri source, LocalizationManager locManager)` — loads from a `Uri` and registers with the supplied manager.
 
 ### Properties
 
-- `LocalizationManager` – assigns the manager that drives locale changes. The property can be set only once; setting it registers the dictionary as a target and creates a scoped logger.
-- `CurrentLocale` – reports the locale currently applied to the dictionary.
-- `NativeFileExtensions` / `TranslationFileExtensions` – arrays describing supported native (`xaml`) and translated (`trd`) file extensions. Static `NativeFileExtension` and `TranslationFileExtension` expose the individual extensions.
-- `ResourceFilePath` – resolves the source URI to a file path or pack URI string, using `Source` or the XAML base URI.
+- `LocalizationManager` — assigns the manager that drives locale changes. The property can be set only once; setting it registers the dictionary as a target and creates a scoped logger.
+- `CurrentLocale` — the locale currently applied to the dictionary.
+- `NativeFileExtensions` / `TranslationFileExtensions` — `xaml` and `trd` arrays. Static `NativeFileExtension` and `TranslationFileExtension` expose the individual extensions.
+- `ResourceFilePath` — resolves the source URI to a file path or pack-style string.
 
 ### Methods
 
-- `GetValueOrDefault<T>(String key, T defaultValue)` – retrieves a resource by key, returning the provided default when lookup or casting fails.
-- `CanLoadNative(Uri sourceUri)` – validates that a file-based source contains a `LocalizableResourceDictionary` root element before loading.
-- `LoadNative()` – reloads the native dictionary from the current `Source` and resets the loaded locale to native.
-- `LoadNative(Uri sourceUri, LocalizationManager localizationManager)` – loads native content from the specified URI while registering with the given manager.
-- `GetTranslationFilePath(LocaleInfo locale)` – composes the absolute path to the translation file for a locale, respecting the manager configuration.
-- `LoadTranslation(String localeName)` / `LoadTranslation(LocaleInfo locale)` – loads translations for the locale. Returns `false` when the locale is invalid or the translation file is missing, and applies `TranslationLoadBehavior` to unmatched keys.
-- `SaveTranslation()` – persists the current contents to the locale-specific `.trd` file, ensuring WPF-compatible XML formatting.
-- `CreateTranslation(LocaleInfo locale)` – creates an empty translation file and parent directories when they do not already exist.
-- `DeleteTranslation(LocaleInfo locale)` – removes the translation file and deletes its directory when empty.
-- `Enumerate()` – returns ordered `KeyValuePair<String, String>` entries for string resources within the dictionary.
-- `UpdateTranslations(IEnumerable<KeyValuePair<String, String>> translations)` – updates string resources for the active locale; throws when called for the native dictionary.
+- `GetValueOrDefault<T>(String key, T defaultValue)` — resource lookup that returns the default on missing keys or cast failures.
+- `CanLoadNative(Uri sourceUri)` — checks the file's root element name and confirms `xmlns="http://schemas.microsoft.com/dotnet/2021/maui"` before accepting it as a MAUI native dictionary.
+- `LoadNative()` — reloads from the current `Source`.
+- `LoadNative(Uri sourceUri, LocalizationManager localizationManager)` — loads native XAML from a URI and registers with the given manager.
+- `GetTranslationAssetPath(LocaleInfo locale)` — composes the relative asset path used by `FileSystem.OpenAppPackageFileAsync` (forward-slash, `Localization/<locale>/<file>.trd`).
+- `GetTranslationFilePath(LocaleInfo locale)` — composes the absolute file system path used as the Windows fall-back.
+- `LoadTranslation(String localeName)` / `LoadTranslation(LocaleInfo locale)` — loads a translation. Tries the MAUI app package asset first; falls back to the file system. Returns `false` when the locale is invalid or no source can be located, and applies `TranslationLoadBehavior` to keys missing from the translation.
+- `SaveTranslation()` — writes the current contents to the locale-specific `.trd` file (Windows / Designer scenario; MAUI runtime apps generally don't write back from the device).
+- `CreateTranslation(LocaleInfo locale)` — creates an empty translation file and parent directories.
+- `DeleteTranslation(LocaleInfo locale)` — removes the translation file and the locale directory if empty.
+- `Enumerate()` — ordered `KeyValuePair<String, String>` view of string resources.
+- `UpdateTranslations(IEnumerable<KeyValuePair<String, String>> translations)` — updates string resources for the active locale; throws when called for the native dictionary.
 
-The class leverages `ISupportInitialize` to coordinate native loading and subsequent translation loading. Registration with `LocalizationManager` uses weak references (via the manager) so disposed dictionaries are cleaned up automatically. Translation file discovery relies on the manager's configured translations directory, and all operations are instrumented with `ILogger` for diagnostics.
-
+Translation discovery is rooted at `LocalizationManager.Configuration.TranslationsDirectoryPath`. Logging goes through `ILogger`. Registration with the manager uses weak references so disposed dictionaries are cleaned up automatically.
 
 ## Usage Patterns
 
-### Basic Setup
+### Application setup
+
+`LocalizationManager` is normally created from your `App` constructor (rather than `MauiProgram.CreateMauiApp`) so it's ready before the first page resolves resources:
 
 ```csharp
-// App.xaml.cs - Application startup
-protected override void OnStartup(StartupEventArgs e)
+// App.xaml.cs
+public partial class App : Application
 {
-    // Configure localization
-    var config = new Configuration
-    {
-        DefaultLocale = new LocaleInfo("en"),
-        TranslationsDirectoryPath = "Localization",
-        TranslationLoadBehavior = TranslationLoadBehavior.KeepNative
-    };
-    
-    // Create localization manager with logging
-    using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-    var locManager = LocalizationManager.CreateDefaultInstance(config, loggerFactory);
-    
-    base.OnStartup(e);
-}
-```
-
-### XAML Integration
-
-```xml
-<!-- MainWindow.xaml -->
-<Window x:Class="MyApp.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <!-- Merge your localizable resource dictionary -->
-                <LocalizableResourceDictionary Source="Resources/Strings.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
-    
-    <Grid>
-        <Button Content="{DynamicResource Button_OK_Text}" />
-        <TextBlock Text="{DynamicResource Welcome_Message}" 
-                   Foreground="{DynamicResource PrimaryBrush}" />
-    </Grid>
-</Window>
-```
-
-### Code-Behind Usage
-
-```csharp
-// MainWindow.xaml.cs
-public partial class MainWindow : Window
-{
-    private LocalizableResourceDictionary _stringResources;
-    
-    public MainWindow()
+    public App()
     {
         InitializeComponent();
-        
-        // Access the merged resource dictionary
-        _stringResources = (LocalizableResourceDictionary)Resources.MergedDictionaries[0];
-        
-        // Use type-safe resource access
-        string welcomeMessage = _stringResources.GetValueOrDefault<string>("Welcome_Message", "Welcome!");
-        MessageBox.Show(welcomeMessage);
+
+        Configuration config = Configuration.Default with { DefaultLocale = new LocaleInfo("en") };
+        config.SupportedLocales = new[] { new LocaleInfo("en"), new LocaleInfo("hy"), new LocaleInfo("ru") };
+
+        LocalizationManager.CreateDefaultInstance(config);
     }
-    
-    private void OnLanguageChanged(object sender, RoutedEventArgs e)
-    {
-        // Change language at runtime
-        LocalizationManager.Default.ChangeLocale("fr");
-        // UI will automatically update through DynamicResource bindings
-    }
+
+    protected override Window CreateWindow(IActivationState? activationState) =>
+        new Window(new AppShell());
 }
 ```
 
-### File Structure
+### XAML integration
 
-```
-MyWpfApp/
-├── Resources/
-│   └── Strings.xaml                 # Native resource dictionary
-├── Localization/
-│   ├── en/
-│   │   └── Strings.trd             # English translations
-│   ├── fr/
-│   │   └── Strings.trd             # French translations
-│   └── de/
-│       └── Strings.trd             # German translations
-└── bin/
-    └── Debug/
-        └── Localization/           # Copied translation files
-            ├── en/
-            ├── fr/
-            └── de/
-```
-
-### Translation File Example
-
-**Native File (Resources/Strings.xaml):**
 ```xml
-<l_wpf:LocalizableResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:s="clr-namespace:System;assembly=netstandard"
-                    xmlns:l_wpf="clr-namespace:Armat.Localization.Wpf;assembly=armat.localization.wpf">
+<!-- MainPage.xaml -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MyApp.MainPage"
+             xmlns:lm="clr-namespace:Armat.Localization.Maui;assembly=armat.localization.maui">
 
-    <!-- String resources -->
-    <s:String x:Key="Welcome_Message">Welcome to our application!</s:String>
-    <s:String x:Key="Button_OK_Text">OK</s:String>
-    <s:String x:Key="Button_Cancel_Text">Cancel</s:String>
-    
-    <!-- Other resource types -->
-    <SolidColorBrush x:Key="PrimaryBrush">#FF0078D4</SolidColorBrush>
-    <Thickness x:Key="DefaultMargin">10,5,10,5</Thickness>
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <lm:LocalizableResourceDictionary Source="/Localization/StringTable.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-</l_wpf:LocalizableResourceDictionary>
+    <VerticalStackLayout Padding="30,0" Spacing="25">
+        <Label Text="{DynamicResource Lbl_HelloWorld}" />
+        <Button Text="{DynamicResource Btn_ClickMe}"
+                SemanticProperties.Hint="{DynamicResource Btn_ClickMe_Hint}"
+                Clicked="OnCounterClicked" />
+    </VerticalStackLayout>
+</ContentPage>
 ```
 
-**Translation File (Localization/fr/Strings.trd):**
-```xml
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:s="clr-namespace:System;assembly=netstandard">
+Notice: use **`{DynamicResource}`**, not `{StaticResource}` — only dynamic references re-resolve when the locale flips.
 
-    <s:String x:Key="Welcome_Message">Bienvenue dans notre application!</s:String>
-    <s:String x:Key="Button_OK_Text">OK</s:String>
-    <s:String x:Key="Button_Cancel_Text">Annuler</s:String>
-    
-    <!-- Resources can be culturally adapted -->
-    <SolidColorBrush x:Key="PrimaryBrush">#FF0066CC</SolidColorBrush>
-    <Thickness x:Key="DefaultMargin">8,4,8,4</Thickness>
-
-</ResourceDictionary>
-```
-
-## Advanced Usage
-
-### Custom Localization Targets
+### Code-behind language switching
 
 ```csharp
-// Custom control that responds to language changes
-public class LocalizableUserControl : UserControl, ILocalizationTarget
+public partial class MainPage : ContentPage
 {
-    public LocaleInfo CurrentLocale { get; private set; } = LocaleInfo.Invalid;
-    
-    public LocalizableUserControl()
+    public MainPage()
     {
-        // Register with localization manager
-        LocalizationManager.Default.Targets.Add(this);
+        InitializeComponent();
     }
-    
-    public void OnLocalizationChanged(LocalizationManager locManager, LocalizationChangeEventArgs args)
+
+    private void OnSwitchToFrench(Object sender, EventArgs e)
     {
-        CurrentLocale = args.NewLocale;
-        UpdateLocalizedContent();
-    }
-    
-    private void UpdateLocalizedContent()
-    {
-        // Update non-resource bound content
-        // This is useful for dynamically generated content
+        // every LocalizableResourceDictionary registered with the manager will reload
+        LocalizationManager.Default.ChangeLocale("fr");
     }
 }
 ```
+
+### Project file (.csproj) wiring
+
+Native `.xaml` files are compiled by the MAUI XAML pipeline. Translation `.trd` files must ship as `MauiAsset` so they're packaged into the app bundle on Android / iOS / Mac Catalyst, and as `CopyToOutputDirectory` so the Windows fall-back finds them on disk:
+
+```xml
+<ItemGroup>
+    <None Update="Localization\**\*.trd">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <TargetPath>%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+    </None>
+    <MauiAsset Include="Localization\**\*.trd"
+               LogicalName="Localization\%(RecursiveDir)%(Filename)%(Extension)" />
+
+    <MauiXaml Update="Localization\StringTable.xaml">
+        <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+</ItemGroup>
+```
+
+The `LogicalName` for `MauiAsset` **must** start with the same `TranslationsDirectoryPath` configured on `LocalizationManager` (default: `Localization`) — that's the prefix `GetTranslationAssetPath` looks for when calling `FileSystem.OpenAppPackageFileAsync`.
+
+### File structure
+
+```
+MyMauiApp/
+├── Localization/
+│   ├── StringTable.xaml             # Native MAUI resource dictionary
+│   ├── en/
+│   │   └── StringTable.trd          # English translations
+│   ├── hy/
+│   │   └── StringTable.trd
+│   └── ru/
+│       └── StringTable.trd
+├── MainPage.xaml
+├── App.xaml
+└── MauiApp.csproj
+```
+
+### Native file format
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<lm:LocalizableResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                                  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                                  x:Class="MyApp.Localization.StringTable"
+                                  xmlns:lm="clr-namespace:Armat.Localization.Maui;assembly=armat.localization.maui"
+                                  xmlns:s="clr-namespace:System;assembly=netstandard">
+
+    <s:String x:Key="Lbl_HelloWorld">Hello, world!</s:String>
+    <s:String x:Key="Btn_ClickMe">Click me</s:String>
+    <s:String x:Key="Btn_ClickMe_Hint">Counts the number of times you click</s:String>
+
+</lm:LocalizableResourceDictionary>
+```
+
+### Translation file format (`Localization/fr/StringTable.trd`)
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<lm:LocalizableResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                                  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                                  xmlns:lm="clr-namespace:Armat.Localization.Maui;assembly=armat.localization.maui"
+                                  xmlns:s="clr-namespace:System;assembly=netstandard">
+
+    <s:String x:Key="Lbl_HelloWorld">Bonjour le monde !</s:String>
+    <s:String x:Key="Btn_ClickMe">Cliquez-moi</s:String>
+    <s:String x:Key="Btn_ClickMe_Hint">Compte le nombre de clics</s:String>
+
+</lm:LocalizableResourceDictionary>
+```
+
+`SaveTranslation()` writes a minimal form of this file (root `ResourceDictionary` in the MAUI namespace plus `<x:String x:Key="…">…</x:String>` children); the additional `xmlns:lm` declaration is only needed if you'll later edit the file as a native dictionary.
 
 ## Best Practices
 
-1. **Use DynamicResource**: Always use `{DynamicResource}` instead of `{StaticResource}` for localizable content to enable runtime language switching
-2. **Resource Types**: The WPF module supports all WPF resource types (strings, brushes, styles, etc.), not just strings
-3. **Build Actions**: 
-   - Set native .xaml files to "Resource" or "Page"
-   - Set translation .trd files to "Copy to Output Directory: Copy if newer"
-4. **Hierarchical Keys**: Use descriptive, hierarchical naming (e.g., `Dialog_Settings_Title`)
-5. **Fallback Values**: Always provide meaningful default values with `GetValueOrDefault<T>`
-6. **Threading**: The localization system is thread-safe, but UI updates must happen on the UI thread
+1. **Use `{DynamicResource}`** for any localizable property — `{StaticResource}` won't refresh on locale change.
+2. **Create `LocalizationManager.Default` from `App.xaml.cs`** — before the first page is built. Doing it in `MauiProgram` is too late for the initial XAML resolution pass.
+3. **Set `Configuration.SupportedLocales`** when your translations live as `MauiAsset` — the directory-scanning fallback in `LocalizationManager.AllLocales` cannot enumerate app package assets at runtime.
+4. **Keep the asset `LogicalName` aligned with `TranslationsDirectoryPath`** — mismatches make `OpenAppPackageFileAsync` silently miss the file and the manager falls back to the file system (which doesn't exist on mobile devices).
+5. **Hierarchical keys** (`Page_Settings_Title`, `Btn_Save_Text`) make translations easier to maintain.
+6. **Threading** — the manager is thread-safe, but UI updates must go through the MAUI dispatcher.
 
-### Use Localization.Designer
+## Localization.Designer support
 
-- Localization Designer source code is available [here](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Designer).
-- Instead of manually creating translation files for each language, Localization Designer can be used to easily load & translate localizable files. It will create corresponding translation files in appropriate directories.
-- Set "Copy to output directory" of generated translation files to "Copy if newer" in Visual Studio. Those will appear in the appropriate Localization subfolders in the bin directory.
+The Localization Designer (a Windows-only WPF tool) recognizes MAUI `LocalizableResourceDictionary` files via their root element name and the `http://schemas.microsoft.com/dotnet/2021/maui` default namespace, and can edit / save matching `.trd` files in the appropriate `<locale>/` subdirectories. See the [Designer documentation](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Designer).
 
 ## Demo Application
 
-Complete usage examples are available through [Armat Localization Demo](https://github.com/ar-mat/Localization/tree/main/Projects/Demo) GitHub link.
+A complete MAUI demo lives at [`Projects/Demo/MauiApp`](https://github.com/ar-mat/Localization/tree/main/Projects/Demo/MauiApp).
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome. For major changes, open an issue first to discuss the design.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](../../LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](../../LICENSE.txt) file for details.

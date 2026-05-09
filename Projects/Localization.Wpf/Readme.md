@@ -33,9 +33,11 @@ Install-Package armat.localization.wpf
 
 - **armat.localization.core** - Core localization functionality
 - **Microsoft.Extensions.Logging.Abstractions** - Logging support
-- **.NET 8.0-windows** - Windows-specific .NET 8.0 framework with WPF support
+- **.NET 10-windows** - Windows-specific .NET 10 framework with WPF support
 
 See more details about the core functionality in [Armat.Localization.Core](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Core).
+
+For MAUI applications, a parallel library is available — see [Armat.Localization.Maui](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Maui).
 
 ## `LocalizableResourceDictionary` class
 

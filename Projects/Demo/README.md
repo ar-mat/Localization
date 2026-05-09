@@ -36,13 +36,31 @@ A full-featured WPF application showing comprehensive localization implementatio
 - `Localization/` - WPF resource dictionaries and translations
 - Complete application lifecycle with localization
 
+### [MauiApp](MauiApp/) - Cross-Platform MAUI Application Demo
+
+A .NET MAUI application showing localization across Android, iOS, Mac Catalyst, and Windows using `Armat.Localization.Core` and `Armat.Localization.Maui`.
+
+**What it demonstrates:**
+- MAUI `LocalizableResourceDictionary` registered in `ContentPage.Resources`
+- `Configuration.SupportedLocales` set explicitly (required when translations ship as `MauiAsset` rather than loose files)
+- `LocalizationManager` created from `App.xaml.cs` so it's ready before the first page resolves resources
+- `MauiAsset` wiring for `.trd` files so they're packaged into the app bundle on mobile platforms
+- Runtime language switching that re-resolves every `{DynamicResource}` binding
+
+**Key Files:**
+- `App.xaml.cs` — manager + supported-locale configuration
+- `MainPage.xaml` — XAML demonstrating `<lm:LocalizableResourceDictionary Source="…" />`
+- `Localization/` — MAUI native dictionaries plus per-locale `.trd` files
+- `MauiApp.csproj` — canonical `MauiAsset` / `MauiXaml` wiring
+
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- .NET 8.0 SDK or later
-- Visual Studio 2022 (recommended) or Visual Studio Code
-- Basic familiarity with .NET and WPF (for WPF demo)
+- .NET 10 SDK or later
+- Visual Studio 2022 17.10+ (recommended) or Visual Studio Code
+- MAUI workload installed for the MAUI demo: `dotnet workload install maui`
+- Basic familiarity with .NET, WPF (for WPF demo), and MAUI (for MAUI demo)
 
 ### Running the Demos
 
@@ -59,8 +77,14 @@ A full-featured WPF application showing comprehensive localization implementatio
 
 3. **Run the WPF Demo:**
    ```bash
-   dotnet run --project ../../Projects/Demo/WpfApp
+   dotnet run --project Projects/Demo/WpfApp/WpfApp.csproj
    ```
+
+4. **Run the MAUI Demo (Windows host):**
+   ```bash
+   dotnet build Projects/Demo/MauiApp/MauiApp.csproj -f net10.0-windows10.0.19041.0
+   ```
+   For Android / iOS / Mac Catalyst use Visual Studio 2022 with the MAUI workload, or `dotnet build -f net10.0-android` etc.
 
 ### Exploring the Code
 
@@ -94,13 +118,22 @@ Demo/
 │       ├── en/               # English translations
 │       ├── hy/               # Armenian translations
 │       └── ru/               # Russian translations
-└── WpfApp/                   # WPF application demo
-    ├── WpfApp.csproj         # Project file
-    ├── App.xaml              # Application definition
-    ├── MainWindow.xaml       # Main window with localized UI
-    ├── MainWindow.xaml.cs    # Code-behind with localization
-    └── Localization/         # WPF localizable resources
-        ├── *.xaml            # Native WPF resource dictionaries
+├── WpfApp/                   # WPF application demo
+│   ├── WpfApp.csproj         # Project file
+│   ├── App.xaml              # Application definition
+│   ├── MainWindow.xaml       # Main window with localized UI
+│   ├── MainWindow.xaml.cs    # Code-behind with localization
+│   └── Localization/         # WPF localizable resources
+│       ├── *.xaml            # Native WPF resource dictionaries
+│       ├── en/               # English translations (.trd files)
+│       ├── hy/               # Armenian translations
+│       └── ru/               # Russian translations
+└── MauiApp/                  # MAUI application demo
+    ├── MauiApp.csproj        # Multi-targeted project (android/ios/maccatalyst/windows)
+    ├── App.xaml.cs           # LocalizationManager + SupportedLocales
+    ├── MainPage.xaml         # Localized MAUI page with DynamicResource bindings
+    └── Localization/         # MAUI localizable resources
+        ├── StringTable.xaml  # Native MAUI ResourceDictionary
         ├── en/               # English translations (.trd files)
         ├── hy/               # Armenian translations
         └── ru/               # Russian translations
@@ -124,6 +157,14 @@ Demo/
 4. **Mixed Localization** - Combining XAML and code-behind localization
 5. **Event Handling** - Responding to language change events
 6. **Status Bar Updates** - Dynamic UI updates on language change
+
+### From MauiApp Demo:
+
+1. **MAUI ResourceDictionary** - Using `<lm:LocalizableResourceDictionary>` from XAML
+2. **App-level setup** - Creating `LocalizationManager.Default` from `App.xaml.cs` so it's ready before the first page is built
+3. **Explicit `SupportedLocales`** - Required when `.trd` files ship as `MauiAsset` (the directory-scanning fallback can't see app-package assets)
+4. **Cross-platform asset loading** - `FileSystem.OpenAppPackageFileAsync` on Android / iOS / Mac Catalyst with file-system fall-back on Windows
+5. **MauiAsset / MauiXaml wiring** - Canonical csproj item groups for native and translation files
 
 ## 🔧 Customization
 

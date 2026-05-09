@@ -21,19 +21,19 @@ Install-Package armat.localization.core
 
 ## ✨ Features
 
-- **Universal .NET support** - Works with any .NET application (.NET 8.0+)
+- **Universal .NET support** - Works with any .NET application (.NET 10+)
 - **Runtime language switching** - Change languages without application restart
 - **Comprehensive locale management** - Built on `System.Globalization.CultureInfo`
 - **Flexible resource loading** - Support for embedded resources and external files
 - **Thread-safe operations** - Safe for multi-threaded applications
 - **Minimal dependencies** - Only requires `Microsoft.Extensions.Logging.Abstractions`
-- **Extensible architecture** - Base for specialized libraries (WPF, etc.)
+- **Extensible architecture** - Base for specialized libraries (WPF, MAUI)
 - **Weak reference management** - Automatic cleanup of disposed localization targets
 
-Note: This is the core module of `Armat.Localization` library. It can be used for localizing strings for all types of .Net applications.
-Below are derived libraries for specialized application types:
+Note: This is the core module of `Armat.Localization` library. It can be used for localizing strings for all types of .Net applications. Below are derived libraries for specialized application types:
 
-Armat.Localization.Wpf can be used for localizing Wpf Resource Dictionaries. See [here](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Wpf) for more information.
+- **[Armat.Localization.Wpf](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Wpf)** — WPF `ResourceDictionary` localization.
+- **[Armat.Localization.Maui](https://github.com/ar-mat/Localization/tree/main/Projects/Localization.Maui)** — MAUI `ResourceDictionary` localization (Android / iOS / Mac Catalyst / Windows).
 
 
 ## Main components
@@ -91,11 +91,12 @@ The class uses weak references to manage localization targets, ensuring automati
 
 Describes configuration parameters for `LocalizationManager` class provided at construction time. Implements `IEquatable<Configuration>`.
 
-- `DefaultLocale` is a nullable `LocaleInfo` property referring to the locale used at application startup. Default constructor sets this to `null`. If not null, the `LocalizationManager` class will initialize the `CurrentLocale` property using it's value.
-- `TranslationsDirectoryPath` property points to the absolute or relative path to localizable resources translation directory. Default constructor sets this to empty string. It is required to have a non-empty value for the `LocalizationManager` to be able to locate translation the translation directories and files.
-- `TranslationLoadBehavior` property is an enumeration of `TranslationLoadBehavior` type with possible values of `KeepNative` (default), `ClearNative` and `RemoveNative`. The property is used to determine the value of a localizable field if the translation file doesn't define the localized value.
+- `DefaultLocale` is a nullable `LocaleInfo` property referring to the locale used at application startup. Default constructor sets this to `null`. If not null, the `LocalizationManager` class will initialize the `CurrentLocale` property using its value.
+- `TranslationsDirectoryPath` property points to the absolute or relative path to the localizable resources translation directory. Default constructor sets this to an empty string. It must have a non-empty value for the `LocalizationManager` to be able to locate translation directories and files.
+- `TranslationLoadBehavior` property is an enumeration of `TranslationLoadBehavior` type with possible values of `KeepNative` (default), `ClearNative` and `RemoveNative`. The property determines the value of a localizable field if the translation file doesn't define the localized value.
+- `SupportedLocales` is a nullable `IEnumerable<LocaleInfo>?` property. When non-null, `LocalizationManager.AllLocales` returns it directly instead of scanning the translations directory on disk. This is required for MAUI applications where translation files ship as `MauiAsset` rather than loose files (the directory scan can't see app-package assets at runtime).
 
-The `Configuration.Default` static property provides default configuration values with `DefaultLocale = LocaleInfo.Invalid`, `TranslationsDirectoryPath = "Localization"`, and `TranslationLoadBehavior = TranslationLoadBehavior.KeepNative`.
+The `Configuration.Default` static property provides default configuration values with `DefaultLocale = LocaleInfo.Invalid`, `TranslationsDirectoryPath = "Localization"`, `TranslationLoadBehavior = TranslationLoadBehavior.KeepNative`, and `SupportedLocales = null`.
 
 Note: `LocalizationManager.AllLocales` will return a special *[Native]* locale additional to the other locales if *Configuration.DefaultLocale == LocaleInfo.Invalid*. This is the default behavior.
 

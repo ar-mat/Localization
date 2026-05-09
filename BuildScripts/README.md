@@ -15,7 +15,7 @@ This directory contains PowerShell scripts for building, packaging, and publishi
 ### Prerequisites
 
 - **PowerShell 5.1** or later
-- **.NET 8.0 SDK** installed
+- **.NET 10 SDK** installed
 - **NuGet CLI** (for advanced packaging scenarios)
 - **Write permissions** to output directories
 

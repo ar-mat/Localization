@@ -10,7 +10,8 @@ The **Armat Localization Designer** is a powerful WPF desktop application for ma
 - **Multiple File Support** - Load and manage multiple localizable resource files simultaneously
 - **Language Management** - Add and remove supported languages dynamically
 - **Real-time Editing** - Edit translations with immediate visual feedback
-- **File Format Detection** - Automatic detection of String Dictionary (.xaml) and WPF Resource Dictionary formats
+- **File Format Detection** - Automatic detection of String Dictionary, WPF Resource Dictionary, and MAUI Resource Dictionary formats (matched by root element + default XML namespace)
+- **MAUI / WPF Round-Tripping** - MAUI resource dictionaries are converted to WPF format internally via XML namespace switching, so editing and saving preserves the original `.xaml` / `.trd` formatting
 - **Bulk Operations** - Save all translations across all languages at once
 - **Directory Scanning** - Automatically discover localizable files in project directories
 - **Translation Validation** - Visual indicators for missing or incomplete translations
@@ -25,7 +26,7 @@ Download the latest release from the [GitHub Releases](https://github.com/ar-mat
 ### System Requirements
 
 - Windows 10 or later
-- .NET 8.0 Runtime (automatically installed if missing)
+- .NET 10 Runtime (automatically installed if missing)
 - Sufficient disk space for translation files
 
 ### Quick Start
@@ -68,7 +69,8 @@ Download the latest release from the [GitHub Releases](https://github.com/ar-mat
 #### File List Panel
 - **File Type Icons** - Visual indicators for different file types:
   - 📄 String Dictionary (`.xaml` with `LocalizableStringDictionary`)
-  - 🎨 WPF Resource Dictionary (`.xaml` with `LocalizableResourceDictionary`)
+  - 🎨 WPF Resource Dictionary (`.xaml` with `LocalizableResourceDictionary`, default xmlns `…/winfx/2006/xaml/presentation`)
+  - 📱 MAUI Resource Dictionary (`.xaml` with `LocalizableResourceDictionary`, default xmlns `…/dotnet/2021/maui`)
   - ❓ Unknown format
 - **File Paths** - Full paths to loaded localizable files
 - **Status Indicators** - Visual feedback on file loading status
@@ -113,6 +115,23 @@ Download the latest release from the [GitHub Releases](https://github.com/ar-mat
 
 </l_wpf:LocalizableResourceDictionary>
 ```
+
+#### MAUI Resource Dictionary Format
+```xml
+<lm:LocalizableResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="MyApp.Localization.StringTable"
+    xmlns:lm="clr-namespace:Armat.Localization.Maui;assembly=armat.localization.maui"
+    xmlns:s="clr-namespace:System;assembly=netstandard">
+
+    <s:String x:Key="MainPage_Title">Main Page</s:String>
+    <s:String x:Key="Btn_ClickMe">Click me</s:String>
+
+</lm:LocalizableResourceDictionary>
+```
+
+The Designer detects MAUI files by the `http://schemas.microsoft.com/dotnet/2021/maui` default namespace. Internally it converts MAUI files to WPF format (XML namespace switching plus root `x:Class` removal) for editing, and reverses the swap when saving — your translation files keep their original encoding, attribute order, and indentation.
 
 ### Output Formats (Translation Files)
 
