@@ -44,6 +44,13 @@
 		<TargetPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">26.0</TargetPlatformVersion>
 		<TargetPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">36.0</TargetPlatformVersion>
 
+		<!-- Suppress per-locale subdirectories (cs/, de/, es/, ja/, ...) in the output. These are
+		     Microsoft.Maui.Controls.resources.dll satellites for the framework's own UI strings
+		     and are unrelated to this library's localization files. `en` is the neutral resources
+		     language and is embedded in the main assembly, so this effectively yields no
+		     satellite folders. -->
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<Title>Armat Localization Maui Module</Title>
 		<Description>C# class library for developing localizable applications. Armat.Localization.Maui module contains LocalizableResourceDictionary to be used for MAUI applications.</Description>

@@ -46,6 +46,13 @@
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
 
+		<!-- Suppress per-locale subdirectories (cs/, de/, es/, ja/, ...) in the output. These are
+		     Microsoft.Maui.Controls.resources.dll satellites for the framework's own UI strings
+		     and are unrelated to this project's Localization/<locale>/ translation files.
+		     `en` is the neutral resources language and is embedded in the main assembly, so this
+		     effectively produces no satellite folders. -->
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
@@ -123,5 +130,25 @@
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>
+
+	<!-- Microsoft.WinUI ships per-language *.dll.mui resource bundles for its built-in controls
+	     in dozens of locale subdirectories (af-ZA, am-ET, ar-SA, ..., zh-HK, zh-TW). The Windows
+	     TFM build output ends up with one folder per language. SatelliteResourceLanguages doesn't
+	     filter these — they're native MUI resources, not managed satellite assemblies — and the
+	     WindowsAppSDK pipeline copies them through item lists that are consumed/cleared before
+	     any user-defined Target can intercept them. The pragmatic fix is a post-build cleanup:
+	     enumerate the output directory, identify subdirs whose names match the IETF language-tag
+	     shape (e.g. xx, xx-YY, xx-Yyyy-ZZ), exclude en-*, and delete them. The "Localization",
+	     "Microsoft.UI.Xaml", "NpuDetect", "Platforms" subdirs all contain a "." or no hyphen,
+	     so the regex leaves them alone. -->
+	<Target Name="RemoveWinUIMuiLocaleFolders"
+	        AfterTargets="Build;Publish"
+	        Condition="'$([MSBuild]::GetTargetPlatformIdentifier($(TargetFramework)))' == 'windows'">
+		<ItemGroup>
+			<_WinUILocaleDir Include="$([System.IO.Directory]::GetDirectories('$(OutDir)'))" />
+		</ItemGroup>
+		<RemoveDir Directories="@(_WinUILocaleDir)"
+		           Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '^[a-zA-Z]{2,3}(-[A-Za-z0-9]+)+$')) And '%(Filename)' != 'en-us'" />
+	</Target>
 
 </Project>
