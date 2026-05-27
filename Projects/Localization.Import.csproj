@@ -6,7 +6,7 @@
 		<Product>Armat Localization</Product>
 		<Authors>Ara Petrosyan</Authors>
 
-		<_ArmatLocalizationVersion>2.2.0</_ArmatLocalizationVersion>
+		<_ArmatLocalizationVersion>2.2.1</_ArmatLocalizationVersion>
 		<Version>$(_ArmatLocalizationVersion)</Version>
 		<AssemblyVersion>$(_ArmatLocalizationVersion).0</AssemblyVersion>
 		<FileVersion>$(_ArmatLocalizationVersion).0</FileVersion>
