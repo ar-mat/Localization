@@ -6,8 +6,8 @@ This directory contains PowerShell scripts for building, packaging, and publishi
 
 | Script | Purpose | Target Projects |
 |--------|---------|----------------|
-| **[Pack.ps1](Pack.ps1)** | Creates NuGet packages for distribution | Core, WPF libraries |
-| **[Publish.ps1](Publish.ps1)** | Publishes applications for deployment | Core, WPF, Designer |
+| **[Pack.ps1](Pack.ps1)** | Creates NuGet packages for distribution | Core, WPF, MAUI libraries |
+| **[Publish.ps1](Publish.ps1)** | Publishes applications for deployment | Core, WPF, MAUI, Designer |
 | **[GetAssemblyVersion.ps1](GetAssemblyVersion.ps1)** | Retrieves version information from assemblies | All projects |
 
 ## 🚀 Usage
@@ -21,7 +21,7 @@ This directory contains PowerShell scripts for building, packaging, and publishi
 
 ### Pack.ps1 - NuGet Package Creation
 
-Creates NuGet packages for the core and WPF libraries.
+Creates NuGet packages for the Core, WPF, and MAUI libraries.
 
 ```powershell
 # Pack all libraries (default behavior)

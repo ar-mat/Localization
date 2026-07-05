@@ -1,6 +1,6 @@
 # Armat Localization Library
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/ar-mat/Localization)
+[![Version](https://img.shields.io/badge/version-2.2.1-blue.svg)](https://github.com/ar-mat/Localization)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
 
@@ -149,10 +149,10 @@ Use the provided PowerShell scripts (run from inside `BuildScripts/`):
 ```powershell
 cd BuildScripts
 
-# Pack NuGet packages (Core + Wpf in Release by default)
+# Pack NuGet packages (Core + Wpf + Maui in Release by default)
 .\Pack.ps1
 
-# Publish applications (Core + Wpf + Designer + zips)
+# Publish applications (Core + Wpf + Maui + Designer + zips)
 .\Publish.ps1
 ```
 

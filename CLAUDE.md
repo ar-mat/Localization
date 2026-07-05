@@ -10,10 +10,11 @@ Top-level shape:
 
 - `Projects/Localization.Core/` — runtime-agnostic core library (`armat.localization.core`).
 - `Projects/Localization.Wpf/` — WPF `LocalizableResourceDictionary` (`armat.localization.wpf`, `net*-windows`, `UseWPF`).
-- `Projects/Localization.Maui/` — MAUI `LocalizableResourceDictionary` (`armat.localization.maui`, multi-targets `-android`, `-ios`, `-maccatalyst`, `-windows10.0.19041.0`).
+- `Projects/Localization.Maui/` — MAUI `LocalizableResourceDictionary` (`armat.localization.maui`). TFMs are host-conditional: `-android` always, `-ios`/`-maccatalyst` on non-Linux hosts, `-windows10.0.19041.0` on Windows hosts only.
 - `Projects/Localization.Designer/` — WPF + WinForms desktop translator GUI (`armat.localization.designer`). Now MAUI-aware.
 - `Projects/Demo/{ClassLibrary,WpfApp,MauiApp}/` — usage examples wired into the .sln.
 - `Projects/Localization.Import.csproj` — **shared MSBuild props imported by every project**. Not a buildable project. Edit this to bump version, change target framework, or change output paths globally (see "Shared build props" below).
+- `Projects/Backup/` — stale manual backup of `Localization.Import.csproj` (still says 2.0.1 / net8.0). Not in the solution, not imported by anything — don't mistake it for the live file, don't update it.
 - `BuildScripts/` — PowerShell scripts; **run them from inside `BuildScripts/`** (they `cd ../Projects/<name>` relatively).
 - `bin/$(Configuration)/` — single repo-wide output directory for all non-MAUI projects (forced by `Localization.Import.csproj`, with `AppendTargetFrameworkToOutputPath=false`). MAUI projects override this to `bin/$(Configuration)/Maui/$(TargetFramework)/`.
 
@@ -31,23 +32,31 @@ dotnet build Projects/Localization.Core/Localization.Core.csproj
 ```powershell
 # From inside BuildScripts/ — the scripts use relative `cd` and will fail elsewhere
 cd BuildScripts
-.\Pack.ps1                                 # all packable libs (Core, Wpf), Release
+.\Pack.ps1                                 # all packable libs (Core, Wpf, Maui), Release
 .\Pack.ps1 -Configuration Debug
 .\Pack.ps1 -ProjectName Localization.Core  # single project
-.\Publish.ps1                              # publishes Core, Wpf, Designer + zips them
+.\Publish.ps1                              # publishes Core, Wpf, Maui, Designer + zips each
 ```
+
+Pack output lands in `bin/<Config>/pack/<Project>/`, publish output in `bin/<Config>/publish/<Project>/` plus a versioned zip. `Publish.ps1` special-cases the MAUI library — it builds/publishes **only the Windows TFM** (`net10.0-windows10.0.19041.0`). `Pack.ps1` has no special case; the MAUI nupkg carries per-TFM `lib/` folders (`net10.0-android36.0`, `-ios26.0`, etc.).
 
 There are **no test projects** in this solution; `dotnet test` is a no-op.
 
 The MAUI library and demo require the MAUI workload installed: `dotnet workload install maui`.
 
+### MAUI packaging & output quirks
+
+- `Localization.Maui.csproj` and `Demo/MauiApp.csproj` **pin `TargetPlatformVersion`** (iOS/Mac Catalyst `26.0`, Android `36.0`) so the packed NuGet `lib/` folders are deterministic. Without the pins, whatever platform SDK the packing machine happens to have silently ratchets the package TFMs upward and locks out consumers on older SDKs (NU1202). Don't remove them; lower them only alongside explicitly-versioned workload installs.
+- Both MAUI csprojs set `SatelliteResourceLanguages=en` to suppress per-locale `Microsoft.Maui.Controls.resources.dll` satellite folders in the output — framework UI strings, unrelated to this library's `Localization/<locale>/` files.
+- `Demo/MauiApp.csproj` additionally has a `RemoveWinUIMuiLocaleFolders` post-build target: WinUI ships native `.mui` resources in per-language folders that `SatelliteResourceLanguages` can't filter (they aren't managed satellites), so the target deletes output subdirectories whose names match the IETF language-tag shape, keeping only `en-us`.
+
 ## Shared build props (`Projects/Localization.Import.csproj`)
 
 Every csproj imports this. It centralizes:
 
-- `Version` (single source of truth for assembly + NuGet version; bump it here, not in individual csprojs). Currently `2.1.0`.
+- `_ArmatLocalizationVersion` — single source of truth for versioning (currently `2.2.1`); bump it here, not in individual csprojs. `Version`, `AssemblyVersion`, and `FileVersion` derive from it. `_NugetVersionPostfix` (currently `-beta`) is appended to form each library's `PackageVersion` and the `PackageReference` versions in the Debug/Release wiring — so assemblies are `2.2.1` while NuGet packages resolve as `2.2.1-beta`. Clear the postfix for a stable release.
 - `_DotNetVersion` — the **actual TFM is .NET 10** (`net10.0`). WPF/Designer projects extend it to `$(_DotNetVersion)-windows`; MAUI to `$(_DotNetVersion)-android`, `-ios`, `-maccatalyst`, and (on Windows hosts) `-windows10.0.19041.0`.
-- `OutputPath = $(SolutionDir)\..\..\bin\$(Configuration)` and `AppendTargetFrameworkToOutputPath=false` — this is why builds land in the single shared `bin/<Config>/` regardless of TFM. MAUI csprojs override `OutputPath` to keep per-TFM directories (otherwise multi-TFM outputs would clobber each other).
+- `OutputPath = $(SolutionDir)\..\..\bin\$(Configuration)` and `AppendTargetFrameworkToOutputPath=false` — this is why builds land in the single shared `bin/<Config>/` regardless of TFM. MAUI csprojs override `OutputPath` to keep per-TFM directories (otherwise multi-TFM outputs would clobber each other). `obj/` is centralized too: `IntermediateOutputPath` goes under `bin/<Config>/obj/<Project>/`.
 - `Nullable=enable`, `ImplicitUsings=disable`, `EnforceCodeStyleInBuild=true`.
 
 ## Debug vs Release dependency wiring
@@ -55,13 +64,13 @@ Every csproj imports this. It centralizes:
 Sub-projects (Wpf, Maui, Designer, Demo apps) reference Core/Wpf via **`ProjectReference` only when `$(Configuration) == 'Debug'`** and via **`PackageReference` to NuGet otherwise**:
 
 ```xml
-<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(Version)$(_NugetVersionPostfix)" />
+<PackageReference Condition="'$(Configuration)' != 'Debug'" Include="armat.localization.core" Version="$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)" />
 <ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\Localization.Core\Localization.Core.csproj" />
 ```
 
 Practical implications:
 - Use **Debug** for inner-loop development — F12, breakpoints, edits in Core/Wpf flow into dependent projects.
-- **Release builds resolve `armat.localization.core` / `.wpf` from NuGet at the version in `Localization.Import.csproj`.** If you bump `Version`, the package must be published before downstream Release builds will restore. To Release-build without publishing first, run `Pack.ps1` and add the local `bin/Release/pack/` directory as a NuGet source, or temporarily flip the conditions.
+- **Release builds resolve `armat.localization.core` / `.wpf` / `.maui` from NuGet at `$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)`** (e.g. `2.2.1-beta`). If you bump the version, the packages must be published before downstream Release builds will restore. To Release-build without publishing first, run `Pack.ps1` and add the local `bin/Release/pack/` directory as a NuGet source, or temporarily flip the conditions.
 
 ## Architecture: how localization works
 
@@ -98,9 +107,9 @@ The MAUI dictionary tries two sources in order during `LoadTranslation`:
 
 When `Configuration.SupportedLocales` isn't set, `LocalizationManager.AllLocales` falls back to scanning the translations directory — that scan can't see `MauiAsset`-packaged files at runtime, so MAUI apps almost always need to set `Configuration.SupportedLocales` explicitly (see `Projects/Demo/MauiApp/App.xaml.cs`).
 
-### Configuration recent changes
+### Configuration notes
 
-- `Configuration` is now a **mutable record struct** (`set`, not `init`) with a new `SupportedLocales` property (`IEnumerable<LocaleInfo>?`). When non-null, `LocalizationManager.AllLocales` returns it directly instead of scanning the translations directory.
+- `Configuration` is a **mutable record struct** (`set`, not `init`) with a `SupportedLocales` property (`IEnumerable<LocaleInfo>?`). When non-null, `LocalizationManager.AllLocales` returns it directly instead of scanning the translations directory.
 - `ILocalizableResource.Source` is `Uri?` (nullable). Implementations may return null before `LoadNative` has been called.
 
 ## Designer app
@@ -137,3 +146,5 @@ Native `.xaml` files **must** be embedded resources (Core / MAUI) or WPF `Resour
 - Use BCL aliases — `String`, `Int32`, `Boolean`, `Object` — not `string`/`int`/`bool`. The codebase is fully consistent on this.
 - Comments are **plain `//` line comments**, lowercase first letter for in-method step descriptions, used for section headers above grouped members and for explaining *why* a non-obvious decision was made. XML doc comments are reserved for the auto-generated WPF code-behind partials (`/// Interaction logic for X.xaml`).
 - File-scoped namespaces, nullable reference types enabled.
+- Commit messages use the `type(scope):` form — `feat(core): …`, `fix(maui): …`, `docs(designer): …`. All contributions go through PRs to `main` (no direct commits).
+- CONTRIBUTING.md asks that per-project `Readme.md` files and this file be updated whenever a change alters public API, file layout, or build behavior.
