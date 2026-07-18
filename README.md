@@ -1,6 +1,6 @@
 # Armat Localization Library
 
-[![Version](https://img.shields.io/badge/version-2.2.1-blue.svg)](https://github.com/ar-mat/Localization)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/ar-mat/Localization)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
 

@@ -10,7 +10,7 @@ using System.Xml;
 
 namespace Armat.Localization.Designer;
 
-internal class LocalizableMauiResourceDictionary : ILocalizableResource
+internal class LocalizableMauiResourceDictionary : ILocalizableResource, IDisposable
 {
 	// XML namespaces that differ between WPF and MAUI XAML
 	private const String WpfDefaultNs = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
@@ -36,6 +36,10 @@ internal class LocalizableMauiResourceDictionary : ILocalizableResource
 	private LocalizationManager? _locMgr;
 	private Uri? _mauiSource;
 	private LocaleInfo _currLocale;
+
+	// temp WPF-converted copy of the native MAUI XAML; it must outlive LoadNative
+	// because the inner dictionary's Source keeps pointing at it (see LoadNative)
+	private String? _tempNativePath;
 
 	public LocalizableMauiResourceDictionary()
 	{
@@ -89,15 +93,24 @@ internal class LocalizableMauiResourceDictionary : ILocalizableResource
 		_currLocale = LocaleInfo.Invalid;
 
 		String mauiPath = GetLocalPath(sourceUri);
-		String tempPath = CreateTempXamlPath();
-		try
+
+		// the temp file must outlive this call: the inner WPF dictionary keeps its
+		// Source pointing at it and may reload from it on locale changes
+		if (_tempNativePath != null)
+			TryDeleteFile(_tempNativePath);
+		_tempNativePath = CreateTempXamlPath();
+
+		ConvertMauiToWpf(mauiPath, _tempNativePath);
+		_innerDictionary.LoadNative(new Uri(_tempNativePath, UriKind.Absolute), localizationManager);
+	}
+
+	public void Dispose()
+	{
+		// remove the temp native file backing the inner dictionary
+		if (_tempNativePath != null)
 		{
-			ConvertMauiToWpf(mauiPath, tempPath);
-			_innerDictionary.LoadNative(new Uri(tempPath, UriKind.Absolute), localizationManager);
-		}
-		finally
-		{
-			TryDeleteFile(tempPath);
+			TryDeleteFile(_tempNativePath);
+			_tempNativePath = null;
 		}
 	}
 
@@ -108,11 +121,9 @@ internal class LocalizableMauiResourceDictionary : ILocalizableResource
 
 		if (!locale.IsValid)
 		{
-			ResetTranslationForKeys(_innerDictionary.Keys, loadBehavior);
+			//ResetTranslationForKeys(_innerDictionary.Keys, loadBehavior);
 			return false;
 		}
-
-		_currLocale = locale;
 
 		String mauiTransPath = GetTranslationFilePath(locale);
 		if (String.IsNullOrEmpty(mauiTransPath))
@@ -121,9 +132,13 @@ internal class LocalizableMauiResourceDictionary : ILocalizableResource
 		FileInfo locFile = new(mauiTransPath);
 		if (!locFile.Exists)
 		{
-			ResetTranslationForKeys(_innerDictionary.Keys, loadBehavior);
+			// the translation was not loaded - leave the contents and locale unchanged
+			//ResetTranslationForKeys(_innerDictionary.Keys, loadBehavior);
 			return false;
 		}
+
+		// update the locale info field
+		_currLocale = locale;
 
 		String tempPath = CreateTempXamlPath();
 		try

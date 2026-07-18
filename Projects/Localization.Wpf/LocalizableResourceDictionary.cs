@@ -59,15 +59,18 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 			LocalizationManager = LocalizationManager.Default;
 
 		// load the translation if not loaded yet
-		if (_currLocale.IsValid && _currLocale != _loadedLocale)
+		// (fall back to the manager's locale - the registration-time load may have
+		// failed before Source was assigned, leaving _currLocale unset)
+		LocaleInfo targetLocale = _currLocale.IsValid ? _currLocale : LocalizationManager.CurrentLocale;
+		if (targetLocale.IsValid && targetLocale != _loadedLocale)
 		{
 			try
 			{
-				LoadTranslation(_currLocale);
+				LoadTranslation(targetLocale);
 			}
 			catch (Exception ex)
 			{
-				Logger.LogError(ex, "Failed to load translation for locale {locale}", _currLocale.Name);
+				Logger.LogError(ex, "Failed to load translation for locale {locale}", targetLocale.Name);
 			}
 		}
 	}
@@ -215,6 +218,11 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 		DirectoryInfo? localeDir = lm.GetTranslationsDirectory(locale.Name);
 		if (localeDir != null)
 		{
+			// an absolute path would make Path.Combine return it unchanged and
+			// silently drop the locale directory - keep only the file name instead
+			if (Path.IsPathRooted(xamlFileName))
+				xamlFileName = Path.GetFileName(xamlFileName);
+
 			xamlFileName = Path.Combine(localeDir.FullName, xamlFileName);
 		}
 		else
@@ -315,12 +323,9 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 		{
 			Logger.LogWarning("Cannot load translation from invalid locale {locale}", locale.Name);
 
-			ResetTranslationForKeys(Keys, loadBehavior);
+			//ResetTranslationForKeys(Keys, loadBehavior);
 			return false;
 		}
-
-		// update the locale info field
-		_currLocale = locale;
 
 		String xamlFileName = GetTranslationFilePath(locale);
 		if (String.IsNullOrEmpty(xamlFileName))
@@ -335,9 +340,12 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 		{
 			Logger.LogWarning("Translation file {xamlFileName} is not found", xamlFileName);
 
-			ResetTranslationForKeys(Keys, loadBehavior);
+			//ResetTranslationForKeys(Keys, loadBehavior);
 			return false;
 		}
+
+		// update the locale info field
+		_currLocale = locale;
 
 		// load from translation file
 		LoadTranslation(locFileInfo, loadBehavior);
@@ -364,6 +372,16 @@ public class LocalizableResourceDictionary : ResourceDictionary, ISupportInitial
 				// iterate by resources / update
 				foreach (Object key in dicLocalized.Keys)
 				{
+					// skip empty string keys
+					String? strKey = key as String;
+					if (strKey != null && strKey.Length == 0)
+						continue;
+
+					// treat empty string values as "not translated" so TranslationLoadBehavior
+					// decides what happens to them (KeepNative keeps the native value)
+					if (dicLocalized[key] is String strValue && strValue.Length == 0)
+						continue;
+
 					// ensure to replace only existing keys, do not add new ones
 					if (unusedKeys.Remove(key))
 						this[key] = dicLocalized[key];

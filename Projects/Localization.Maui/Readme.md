@@ -53,10 +53,7 @@ Unlike WPF, **MAUI does not call `ISupportInitialize.EndInit()` on `ResourceDict
 ### Constructors
 
 - `LocalizableResourceDictionary()` — empty dictionary; suitable for XAML instantiation.
-- `LocalizableResourceDictionary(String sourceUri)` — loads from a URI using the default localization manager.
-- `LocalizableResourceDictionary(String sourceUri, LocalizationManager locManager)` — loads from a URI using the supplied manager.
-- `LocalizableResourceDictionary(Uri source)` — loads from a `Uri` using the default manager.
-- `LocalizableResourceDictionary(Uri source, LocalizationManager locManager)` — loads from a `Uri` and registers with the supplied manager.
+- The `String` / `Uri` source constructors currently **fail at runtime**: MAUI does not allow assigning `ResourceDictionary.Source` from code, so the base setter throws `InvalidOperationException` ("Source can only be set from XAML"). They are kept in case MAUI permits programmatic sources in the future — instantiate the dictionary from XAML with a `Source` attribute instead.
 
 ### Properties
 
@@ -69,18 +66,18 @@ Unlike WPF, **MAUI does not call `ISupportInitialize.EndInit()` on `ResourceDict
 
 - `GetValueOrDefault<T>(String key, T defaultValue)` — resource lookup that returns the default on missing keys or cast failures.
 - `CanLoadNative(Uri sourceUri)` — checks the file's root element name and confirms `xmlns="http://schemas.microsoft.com/dotnet/2021/maui"` before accepting it as a MAUI native dictionary.
-- `LoadNative()` — reloads from the current `Source`.
-- `LoadNative(Uri sourceUri, LocalizationManager localizationManager)` — loads native XAML from a URI and registers with the given manager.
+- `LoadNative()` — restores the native (untranslated) values from a snapshot captured when the XAML content was first loaded (MAUI does not allow re-assigning `Source` from code).
+- `LoadNative(Uri sourceUri, LocalizationManager localizationManager)` — **throws `NotSupportedException`** on MAUI; load dictionaries from XAML instead.
 - `GetTranslationAssetPath(LocaleInfo locale)` — composes the relative asset path used by `FileSystem.OpenAppPackageFileAsync` (forward-slash, `Localization/<locale>/<file>.trd`).
 - `GetTranslationFilePath(LocaleInfo locale)` — composes the absolute file system path used as the Windows fall-back.
-- `LoadTranslation(String localeName)` / `LoadTranslation(LocaleInfo locale)` — loads a translation. Tries the MAUI app package asset first; falls back to the file system. Returns `false` when the locale is invalid or no source can be located, and applies `TranslationLoadBehavior` to keys missing from the translation.
+- `LoadTranslation(String localeName)` / `LoadTranslation(LocaleInfo locale)` — loads a translation. Tries the MAUI app package asset first; falls back to the file system. Returns `false` (leaving the contents and `CurrentLocale` unchanged) when the locale is invalid or no source can be located, and applies `TranslationLoadBehavior` to keys missing from a successfully loaded translation. Empty-string values are treated the same as missing keys.
 - `SaveTranslation()` — writes the current contents to the locale-specific `.trd` file (Windows / Designer scenario; MAUI runtime apps generally don't write back from the device).
 - `CreateTranslation(LocaleInfo locale)` — creates an empty translation file and parent directories.
 - `DeleteTranslation(LocaleInfo locale)` — removes the translation file and the locale directory if empty.
 - `Enumerate()` — ordered `KeyValuePair<String, String>` view of string resources.
 - `UpdateTranslations(IEnumerable<KeyValuePair<String, String>> translations)` — updates string resources for the active locale; throws when called for the native dictionary.
 
-Translation discovery is rooted at `LocalizationManager.Configuration.TranslationsDirectoryPath`. Logging goes through `ILogger`. Registration with the manager uses weak references so disposed dictionaries are cleaned up automatically.
+Translation discovery is rooted at `LocalizationManager.Configuration.TranslationsDirectoryPath`. Source URIs may use MAUI's cross-assembly form `Path.xaml;assembly=AssemblyName` (path first — unlike WPF's `/Assembly;component/Path`); the `;assembly=…` suffix is stripped when composing translation paths. Logging goes through `ILogger`. Registration with the manager uses weak references so disposed dictionaries are cleaned up automatically.
 
 ## Usage Patterns
 

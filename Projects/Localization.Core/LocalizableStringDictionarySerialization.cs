@@ -23,8 +23,16 @@ public class LocalizationDocument
 	{
 		System.Xml.Serialization.XmlSerializer serializer = new(typeof(LocalizationDocument));
 
+		// prohibit DTD processing - translation files never need it, and it protects
+		// against XML entity-expansion attacks when loading untrusted files
+		System.Xml.XmlReaderSettings readerSettings = new()
+		{
+			DtdProcessing = System.Xml.DtdProcessing.Prohibit
+		};
+		using System.Xml.XmlReader xmlReader = System.Xml.XmlReader.Create(stream, readerSettings);
+
 		// de-serialize from stream
-		return serializer.Deserialize(stream) as LocalizationDocument;
+		return serializer.Deserialize(xmlReader) as LocalizationDocument;
 	}
 	public void Save(Stream stream)
 	{

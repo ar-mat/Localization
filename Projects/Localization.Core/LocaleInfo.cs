@@ -70,13 +70,27 @@ public record LocaleInfo : IComparable<LocaleInfo>
 	}
 
 
+	// equality is based on the culture name only - two LocaleInfo instances for the
+	// same culture must compare equal regardless of DisplayNameOverride
+	public virtual Boolean Equals(LocaleInfo? other)
+	{
+		if (other is null)
+			return false;
+
+		return Name == other.Name;
+	}
+	public override Int32 GetHashCode()
+	{
+		return Name.GetHashCode();
+	}
+
 	// comparison by names allows getting a sorted list of all locales to be displayed on locale selectors
 	public Int32 CompareTo(LocaleInfo? other)
 	{
 		if (other == null)
 			return 1;
 
-		return Name.CompareTo(other.Name);
+		return String.CompareOrdinal(Name, other.Name);
 	}
 	public override String ToString()
 	{

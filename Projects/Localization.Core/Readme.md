@@ -54,6 +54,7 @@ Represents a wrapper over `System.Globalization.CultureInfo` class, specializing
 - `DisplayName` property returns `DisplayNameOverride` if set, otherwise returns `Culture.DisplayName` for valid locales.
 - `CompareTo` method provides comparison by locale names for consistent sorting.
 - `ToString()` method returns the `DisplayName` value.
+- Equality is based on the culture `Name` only — `DisplayNameOverride` doesn't participate in comparisons.
 
 The class supports multiple constructors: parameterless (for Invalid), from `CultureInfo`, from `CultureInfo` with display name override, and from locale name string.
 
@@ -94,7 +95,7 @@ Describes configuration parameters for `LocalizationManager` class provided at c
 - `DefaultLocale` is a nullable `LocaleInfo` property referring to the locale used at application startup. Default constructor sets this to `null`. If not null, the `LocalizationManager` class will initialize the `CurrentLocale` property using its value.
 - `TranslationsDirectoryPath` property points to the absolute or relative path to the localizable resources translation directory. Default constructor sets this to an empty string. It must have a non-empty value for the `LocalizationManager` to be able to locate translation directories and files.
 - `TranslationLoadBehavior` property is an enumeration of `TranslationLoadBehavior` type with possible values of `KeepNative` (default), `ClearNative` and `RemoveNative`. The property determines the value of a localizable field if the translation file doesn't define the localized value.
-- `SupportedLocales` is a nullable `IEnumerable<LocaleInfo>?` property. When non-null, `LocalizationManager.AllLocales` returns it directly instead of scanning the translations directory on disk. This is required for MAUI applications where translation files ship as `MauiAsset` rather than loose files (the directory scan can't see app-package assets at runtime).
+- `SupportedLocales` is a nullable `IEnumerable<LocaleInfo>?` property. When non-null, `LocalizationManager.AllLocales` returns it directly instead of scanning the translations directory on disk. The list is returned as-is — the automatic `DefaultLocale` prepend applies only to the directory-scan fallback. This is required for MAUI applications where translation files ship as `MauiAsset` rather than loose files (the directory scan can't see app-package assets at runtime).
 
 The `Configuration.Default` static property provides default configuration values with `DefaultLocale = LocaleInfo.Invalid`, `TranslationsDirectoryPath = "Localization"`, `TranslationLoadBehavior = TranslationLoadBehavior.KeepNative`, and `SupportedLocales = null`.
 
@@ -123,7 +124,7 @@ Represents a type derived from `Dictionary<String, String>` of key-value pairs t
 - `FormResourceUri(Type type)` static method helps create proper URI from a Type for embedded resources using the format `/{AssemblyName};component/{TypeFullName}.xaml`.
 - `LoadNative()` methods load native language content from file or embedded resource.
 - `CanLoadNative(Uri sourceUri)` checks if the source can be loaded as a valid LocalizableStringDictionary.
-- `LoadTranslation(String localeName)` and `LoadTranslation(LocaleInfo locale)` load translations for the given locale.
+- `LoadTranslation(String localeName)` and `LoadTranslation(LocaleInfo locale)` load translations for the given locale. They return `false` and leave the dictionary contents and `CurrentLocale` unchanged when the translation file doesn't exist.
 - `SaveTranslation()` saves the current locale translation to file.
 - `CreateTranslation(LocaleInfo locale)` creates an empty translation file for the given locale.
 - `DeleteTranslation(LocaleInfo locale)` deletes the translation file for the given locale.
@@ -174,6 +175,8 @@ Defines how missing translations are handled:
 - `KeepNative` - Keep original native values (default)
 - `ClearNative` - Replace with empty strings
 - `RemoveNative` - Remove keys entirely
+
+Empty-string values in a translation file are treated the same as missing keys, so partially translated files fall back per this setting (the Localization Designer persists untranslated cells as empty strings).
 
 ### Serialization Support
 

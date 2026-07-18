@@ -35,8 +35,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 	private Popup? PopupWindow { get; set; }
 	private void OnShowPopupClick(Object sender, RoutedEventArgs e)
 	{
-		PopupWindow ??= new();
-		PopupWindow.Closing += (sender, e) => PopupWindow = null;
+		// subscribe only when constructing - re-subscribing on every click would
+		// stack duplicate handlers on the same window instance
+		if (PopupWindow == null)
+		{
+			PopupWindow = new();
+			PopupWindow.Closing += (sender, e) => PopupWindow = null;
+		}
 
 		PopupWindow.Show();
 		PopupWindow.Activate();

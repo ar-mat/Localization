@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 
 namespace Armat.Localization;
 
@@ -15,6 +14,10 @@ public class LocalizationManager
 {
 	private LocalizationManager()
 	{
+		// ensure sane defaults even for the placeholder instance created before
+		// CreateDefaultInstance - default(Configuration) would carry a null path
+		Configuration = Configuration.Default;
+
 		LoggerFactory = NullLoggerFactory.Instance;
 		Logger = NullLogger.Instance;
 
@@ -35,14 +38,23 @@ public class LocalizationManager
 	}
 	public static LocalizationManager CreateDefaultInstance(Configuration config, ILoggerFactory loggerFactory)
 	{
-		// check if already created
-		if (_default is not null)
-			throw new NotSupportedException("Default Localization Manager cannot be updated");
+		lock (_defaultInstanceLock)
+		{
+			// check if already created
+			if (_default is not null)
+				throw new NotSupportedException("Default Localization Manager cannot be updated");
 
-		// create and assign to default
-		_default = CreateInstance(config, loggerFactory);
+			// create and assign to default
+			_default = CreateInstance(config, loggerFactory);
 
-		return _default;
+			// targets created before this call registered with the placeholder manager
+			// and will never receive locale changes from the default manager - make the
+			// misconfiguration visible instead of failing silently
+			if (_none._listTargets.Count > 0)
+				_default.Logger.LogWarning("{Count} localization target(s) were registered before CreateDefaultInstance was called; they will not follow the default manager's locale changes", _none._listTargets.Count);
+
+			return _default;
+		}
 	}
 	public static LocalizationManager CreateInstance(Configuration config)
 	{
@@ -71,6 +83,7 @@ public class LocalizationManager
 	}
 
 	// the singleton instance
+	private static readonly Object _defaultInstanceLock = new();
 	private static LocalizationManager? _default = null;
 	private static readonly LocalizationManager _none = new();
 	public static LocalizationManager Default
@@ -200,10 +213,9 @@ public class LocalizationManager
 
 		if (!Path.IsPathFullyQualified(locDirectoryPath))
 		{
-			// combine the relative path to with the executing assembly location
-			String? assemblyDir = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
-			if (!String.IsNullOrEmpty(assemblyDir))
-				locDirectoryPath = Path.Combine(assemblyDir, locDirectoryPath);
+			// combine the relative path with the application base directory
+			// (Assembly.Location is empty in single-file published apps)
+			locDirectoryPath = Path.Combine(AppContext.BaseDirectory, locDirectoryPath);
 		}
 
 		return new DirectoryInfo(locDirectoryPath);
@@ -226,8 +238,10 @@ public class LocalizationManager
 
 		try
 		{
-			// try to create a locale info based on the directory name
-			result = new LocaleInfo(locDirInfo.Name);
+			// try to create a locale info based on the directory name;
+			// predefinedOnly ensures ICU platforms don't fabricate cultures
+			// for arbitrary well-formed directory names
+			result = new LocaleInfo(CultureInfo.GetCultureInfo(locDirInfo.Name, predefinedOnly: true));
 			if (!result.IsValid)
 				throw new CultureNotFoundException(nameof(locDirInfo), "Invalid Locale", locDirInfo.Name);
 		}

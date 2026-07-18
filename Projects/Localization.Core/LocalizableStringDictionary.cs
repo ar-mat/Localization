@@ -39,7 +39,9 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 		_currLocale = LocaleInfo.Invalid;
 		_loadedLocale = LocaleInfo.Invalid;
 
-		_source = source;
+		// assign through the property (not the field) so the native content is loaded;
+		// the subsequent LocalizationManager registration then applies the active translation
+		Source = source;
 
 		// register string dictionary in localization manager to receive further localization change events
 		LocalizationManager = locManager;
@@ -57,15 +59,18 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 			LocalizationManager = LocalizationManager.Default;
 
 		// load the translation if not loaded yet
-		if (_currLocale.IsValid && _currLocale != _loadedLocale)
+		// (fall back to the manager's locale - the registration-time load may have
+		// failed before Source was assigned, leaving _currLocale unset)
+		LocaleInfo targetLocale = _currLocale.IsValid ? _currLocale : LocalizationManager.CurrentLocale;
+		if (targetLocale.IsValid && targetLocale != _loadedLocale)
 		{
 			try
 			{
-				LoadTranslation(_currLocale);
+				LoadTranslation(targetLocale);
 			}
 			catch (Exception ex)
 			{
-				Logger.LogError(ex, "Failed to load translation for locale {locale}", _currLocale.Name);
+				Logger.LogError(ex, "Failed to load translation for locale {locale}", targetLocale.Name);
 			}
 		}
 	}
@@ -99,8 +104,17 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 		{
 			_source = value;
 
+			// a null source unloads the dictionary contents
+			if (_source == null)
+			{
+				Clear();
+				_isLoaded = false;
+				_loadedLocale = LocaleInfo.Invalid;
+				return;
+			}
+
 			// try to auto-load
-			if (_source == null || ResourceFilePath.Length > 0)
+			if (ResourceFilePath.Length > 0)
 				LoadNative();
 		}
 	}
@@ -231,11 +245,15 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 		{
 			String assemblyName = resourcePath[..sepIndex].TrimStart('/');
 			resourcePath = resourcePath[(sepIndex + 1)..];
-			asm = Assembly.Load(assemblyName);
-			if (asm == null)
+			try
 			{
-				Logger.LogError("Failed to load assembly with name {assemblyName}", assemblyName);
-				throw new TypeLoadException($"Assembly with name {assemblyName} is not found");
+				// Assembly.Load never returns null - it throws on failure
+				asm = Assembly.Load(assemblyName);
+			}
+			catch (Exception ex)
+			{
+				Logger.LogError(ex, "Failed to load assembly with name {assemblyName}", assemblyName);
+				throw new TypeLoadException($"Assembly with name {assemblyName} is not found", ex);
 			}
 		}
 		else
@@ -283,7 +301,7 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 			if (assemblyName.Length > 0 && xamlFileName.StartsWith(assemblyName + '.', StringComparison.OrdinalIgnoreCase))
 				xamlFileName = xamlFileName.Remove(0, assemblyName.Length + 1);
 
-			// replace all '.'-s with '/'-s without the last one (excluding the file extension)
+			// replace all '.'-s with '/'-s skipping the last one (excluding the file extension)
 			Char[] arrFileNameChars = xamlFileName.ToCharArray();
 			Int32 dirSepIndex = Array.LastIndexOf(arrFileNameChars, '.');
 			Boolean isLast = true;
@@ -311,6 +329,11 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 		DirectoryInfo? localeDir = lm.GetTranslationsDirectory(locale.Name);
 		if (localeDir != null)
 		{
+			// an absolute path would make Path.Combine return it unchanged and
+			// silently drop the locale directory - keep only the file name instead
+			if (Path.IsPathRooted(xamlFileName))
+				xamlFileName = Path.GetFileName(xamlFileName);
+
 			xamlFileName = Path.Combine(localeDir.FullName, xamlFileName);
 		}
 		else
@@ -473,12 +496,9 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 			Logger.LogWarning("Cannot load translation from invalid locale {locale}", locale.Name);
 			//throw new ArgumentException($"Cannot load translation from invalid locale {locale.Name}", nameof(locale));
 
-			ResetTranslationForKeys(Keys, loadBehavior);
+			//ResetTranslationForKeys(Keys, loadBehavior);
 			return false;
 		}
-
-		// update the locale info field
-		_currLocale = locale;
 
 		String xamlFileName = GetTranslationFilePath(locale);
 		if (String.IsNullOrEmpty(xamlFileName))
@@ -494,9 +514,12 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 			Logger.LogWarning("Translation file {xamlFileName} is not found", xamlFileName);
 			//throw new ArgumentException($"Translation file {xamlFileName} is not found for locale {locale.Name}", nameof(locale));
 
-			ResetTranslationForKeys(Keys, loadBehavior);
+			//ResetTranslationForKeys(Keys, loadBehavior);
 			return false;
 		}
+
+		// update the locale info field
+		_currLocale = locale;
 
 		// load from translation file
 		LoadTranslation(locFileInfo, loadBehavior);
@@ -518,7 +541,7 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 			using FileStream fs = locFileInfo.OpenRead();
 
 			// set of unused keys
-			HashSet<String> unusedKeys = Keys.OfType<String>().ToHashSet();
+			HashSet<String> unusedKeys = Keys.ToHashSet(Comparer);
 
 			// load the string dictionary
 			LocalizationDocument? docDeserialized = LocalizationDocument.Load(fs);
@@ -526,8 +549,13 @@ public class LocalizableStringDictionary : Dictionary<String, String>, ISupportI
 			{
 				foreach (TextRecord record in docDeserialized.Records)
 				{
+					// treat empty values as "not translated" so TranslationLoadBehavior
+					// decides what happens to them (KeepNative keeps the native text)
+					if (String.IsNullOrEmpty(record.Key) || String.IsNullOrEmpty(record.Value))
+						continue;
+
 					// ensure to replace only existing keys, do not add new ones
-					if (!String.IsNullOrEmpty(record.Key) && unusedKeys.Remove(record.Key))
+					if (unusedKeys.Remove(record.Key))
 						this[record.Key] = record.Value;
 				}
 			}

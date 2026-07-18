@@ -66,6 +66,10 @@ public class LocalizableResourceFile
 	public ILocalizableResource? LocalizableResource { get; private set; }
 	private Dictionary<String, ILocalizableResource> LocalizableResourceTranslations { get; set; }
 
+	// locales known to have no translation file - avoids re-parsing the native
+	// resource on every UI refresh (see GetResourceTranslation)
+	private readonly HashSet<String> _missingTranslations = new();
+
 	// Represents list of supported extensions for localizable files in native language
 	private static readonly String[] _nativeFileExtArray =
 		(new String[]
@@ -93,9 +97,11 @@ public class LocalizableResourceFile
 		LocalizationManager = null;
 
 		// reset loaded contents
+		(LocalizableResource as IDisposable)?.Dispose();
 		LocalizableResource = null;
 		ResourceType = LocalizableResourceType.Unknown;
 		LocalizableResourceTranslations.Clear();
+		_missingTranslations.Clear();
 	}
 	public Boolean Load(String resourceFilePath, String? translationsDirectoryPath = null)
 	{
@@ -202,6 +208,10 @@ public class LocalizableResourceFile
 		if (LocalizableResourceTranslations.TryGetValue(locale.Name, out dict))
 			return dict;
 
+		// avoid re-loading the native resource for locales known to have no translation
+		if (_missingTranslations.Contains(locale.Name))
+			return null;
+
 		// try to load and apply the translation if not found
 		if (ResourceType == LocalizableResourceType.StringDictionary)
 			dict = TryLoadStringDictionary(FullPath, lm);
@@ -217,7 +227,16 @@ public class LocalizableResourceFile
 			// load the translation
 			// and register in the map if succeeded
 			if (dict.LoadTranslation(locale))
+			{
 				LocalizableResourceTranslations.Add(locale.Name, dict);
+			}
+			else
+			{
+				// no translation file for this locale - remember the miss and report null
+				// instead of leaking the native contents into a translation column
+				_missingTranslations.Add(locale.Name);
+				dict = null;
+			}
 		}
 
 		return dict;
@@ -240,6 +259,7 @@ public class LocalizableResourceFile
 		// create an empty translation file
 		// this will ensure to have the below GetResourceTranslation call succeeded
 		locResource.CreateTranslation(locale);
+		_missingTranslations.Remove(locale.Name);
 
 		// apply & save translations
 		ILocalizableResource? locResourceTrans = GetResourceTranslation(locale);
@@ -257,6 +277,7 @@ public class LocalizableResourceFile
 
 		// create an empty translation file
 		locResource.CreateTranslation(locale);
+		_missingTranslations.Remove(locale.Name);
 	}
 	public void DeleteTranslation(LocaleInfo locale)
 	{
@@ -266,5 +287,9 @@ public class LocalizableResourceFile
 
 		// delete the translation file
 		locResource.DeleteTranslation(locale);
+
+		// the translation file is gone - drop the cached dictionary and remember the miss
+		LocalizableResourceTranslations.Remove(locale.Name);
+		_missingTranslations.Add(locale.Name);
 	}
 }

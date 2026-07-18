@@ -1,17 +1,15 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Xml;
-
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Internals;
 using Microsoft.Maui.Controls.Xaml;
 using Microsoft.Maui.Storage;
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Xml;
 
 namespace Armat.Localization.Maui;
 
@@ -44,6 +42,9 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 	public LocalizableResourceDictionary(Uri source, LocalizationManager locManager)
 		: this()
 	{
+		// Although MAUI's ResourceDictionary.Source setter throws "Source can only be set from
+		// XAML", making URI-based construction impossible on this platform,
+		// the constructor is kept in case it's used in another way
 		Source = source;
 
 		// register string dictionary in localization manager to receive further localization change events
@@ -53,6 +54,11 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 	// Fired by MAUI when the native XAML content is first loaded into this dictionary.
 	// Used as the post-initialization hook since EndInit() is not called in MAUI.
 	private Boolean _initialized = false;
+
+	// snapshot of the native (untranslated) contents, captured after MAUI finishes
+	// loading the XAML; used to restore native values because MAUI does not allow
+	// re-assigning ResourceDictionary.Source from code
+	private Dictionary<String, Object>? _nativeContents = null;
 	private void OnNativeValuesLoaded(Object? sender, ResourcesChangedEventArgs e)
 	{
 		// ignore the event while the Source is not set
@@ -67,6 +73,9 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 
 		// unsubscribe after first call - we only need initialization once
 		((IResourceDictionary)this).ValuesChanged -= OnNativeValuesLoaded;
+
+		// capture the native contents before any translation is applied - see LoadNative
+		_nativeContents = new Dictionary<String, Object>(this, StringComparer.Ordinal);
 
 		// in case there's a non-native locale selected in Localization Manager, OnLocalizationChanged will be triggered
 		// upon _locMgr.Targets.Add() and LoadTranslation will be called with the appropriate Locale
@@ -152,6 +161,7 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 			{
 				_currLocale = LocaleInfo.Invalid;
 				LoadNative();
+				_loadedLocale = LocaleInfo.Invalid;
 			}
 
 			// check if localization has changed after LoadTranslation
@@ -209,7 +219,8 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 	}
 	public String GetTranslationAssetPath(String xamlFileName, LocaleInfo locale)
 	{
-		// strip pack URI components
+		// strip pack URI components - keep the path before the ';' separator
+		// (unlike WPF, MAUI puts the xaml path first, followed by the assembly part)
 		Int32 pathSepIndex = xamlFileName.LastIndexOf(';');
 		if (pathSepIndex != -1)
 			xamlFileName = xamlFileName[..pathSepIndex];
@@ -257,7 +268,8 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 	{
 		LocalizationManager lm = LocalizationManager;
 
-		// ensure to have only the xaml file path in xamlFileName
+		// strip pack URI components - keep the path before the ';' separator
+		// (unlike WPF, MAUI puts the xaml path first, followed by the assembly part)
 		Int32 pathSepIndex = xamlFileName.LastIndexOf(';');
 		if (pathSepIndex != -1)
 			xamlFileName = xamlFileName[..pathSepIndex];
@@ -276,6 +288,11 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 		DirectoryInfo? localeDir = lm.GetTranslationsDirectory(locale.Name);
 		if (localeDir != null)
 		{
+			// an absolute path would make Path.Combine return it unchanged and
+			// silently drop the locale directory - keep only the file name instead
+			if (Path.IsPathRooted(xamlFileName))
+				xamlFileName = Path.GetFileName(xamlFileName);
+
 			xamlFileName = Path.Combine(localeDir.FullName, xamlFileName);
 		}
 		else
@@ -345,22 +362,30 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 	}
 	public void LoadNative()
 	{
-		Uri? uri = Source;
-		if (uri != null)
-			Source = new Uri(uri.OriginalString, uri.IsAbsoluteUri ? UriKind.Absolute : UriKind.Relative);
+		// MAUI does not allow re-assigning ResourceDictionary.Source from code
+		// ("Source can only be set from XAML"), so native values are restored
+		// from the snapshot captured when the dictionary was first loaded
+		if (_nativeContents != null)
+		{
+			foreach (KeyValuePair<String, Object> pair in _nativeContents)
+				this[pair.Key] = pair.Value;
 
-		// reset the loaded locale if the native file is being loaded
+			// remove keys that are not part of the native contents
+			String[] extraKeys = Keys.Where(key => !_nativeContents.ContainsKey(key)).ToArray();
+			foreach (String key in extraKeys)
+				Remove(key);
+		}
+
+		// reset the loaded locale - the dictionary is back to its native contents
 		_loadedLocale = LocaleInfo.Invalid;
 	}
 	public void LoadNative(Uri sourceUri, LocalizationManager localizationManager)
 	{
-		// use the provided localization manager
-		LocalizationManager = localizationManager;
-
-		// try to load the file
-		((ISupportInitialize)this).BeginInit();
-		Source = sourceUri;
-		((ISupportInitialize)this).EndInit();
+		// MAUI's ResourceDictionary neither implements ISupportInitialize nor allows
+		// assigning Source from code, so URI-based loading cannot work on this platform
+		throw new NotSupportedException(
+			"MAUI does not allow assigning ResourceDictionary.Source from code. " +
+			"Instantiate the dictionary from XAML with a Source attribute instead.");
 	}
 
 	// loading translations
@@ -376,12 +401,9 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 		{
 			Logger.LogWarning("Cannot load translation from invalid locale {locale}", locale.Name);
 
-			ResetTranslationForKeys(Keys, loadBehavior);
+			//ResetTranslationForKeys(Keys, loadBehavior);
 			return false;
 		}
-
-		// update the locale info field
-		_currLocale = locale;
 
 		Stream? stream = null;
 
@@ -394,8 +416,10 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 				if (FileSystem.AppPackageFileExistsAsync(assetPath).GetAwaiter().GetResult())
 					stream = FileSystem.OpenAppPackageFileAsync(assetPath).GetAwaiter().GetResult();
 			}
-			catch
+			catch (Exception ex)
 			{
+				// the file-system fall-back below may still succeed - log and continue
+				Logger.LogWarning(ex, "Failed to open translation asset {assetPath}", assetPath);
 			}
 		}
 
@@ -414,12 +438,15 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 			{
 				Logger.LogWarning("Translation file {xamlFileName} is not found", xamlFileName);
 
-				ResetTranslationForKeys(Keys, loadBehavior);
+				//ResetTranslationForKeys(Keys, loadBehavior);
 				return false;
 			}
 
 			stream = locFileInfo.OpenRead();
 		}
+
+		// update the locale info field
+		_currLocale = locale;
 
 		using (stream)
 			LoadTranslation(stream, loadBehavior);
@@ -443,6 +470,11 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 			// iterate by resources / update
 			foreach (KeyValuePair<String, Object> pair in dicLocalized)
 			{
+				// treat empty string values as "not translated" so TranslationLoadBehavior
+				// decides what happens to them (KeepNative keeps the native value)
+				if (pair.Key.Length == 0 || (pair.Value is String strValue && strValue.Length == 0))
+					continue;
+
 				// ensure to replace only existing keys, do not add new ones
 				if (unusedKeys.Remove(pair.Key))
 					this[pair.Key] = pair.Value;

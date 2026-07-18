@@ -15,18 +15,12 @@ internal class UIMessagesSD
 		LocalizedStrings.LoadNative(sourceUri, LocalizationManager.Default);
 	}
 
-	private static UIMessagesSD? _instance = null;
-	public static UIMessagesSD Instance
-	{
-		get
-		{
-			_instance ??= CreateDefaultInstance();
-			return _instance;
-		}
-	}
+	// Lazy<T> makes the singleton initialization thread-safe
+	private static readonly Lazy<UIMessagesSD> _instance = new(() => new UIMessagesSD());
+	public static UIMessagesSD Instance => _instance.Value;
 	public static UIMessagesSD CreateDefaultInstance()
 	{
-		return _instance ??= new UIMessagesSD();
+		return Instance;
 	}
 
 	public LocalizableStringDictionary LocalizedStrings { get; init; }

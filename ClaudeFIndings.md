@@ -31,7 +31,7 @@ This document lists every finding from a full review of the library source (Core
 | B7 | Designer load/save mutex releases at the first `await` | Medium | High | Localization.Designer |
 | B8 | Pre-init `Default` manager silently swallows registrations; its config has a null path | Medium | High | Localization.Core |
 | B9 | Setting `Source = null` clears the dictionary, then throws | Low | High | Localization.Core |
-| B10 | MAUI splits `';'` URIs backwards (latent) | Low | High | Localization.Maui |
+| B10 | MAUI splits `';'` URIs backwards — **withdrawn**, the original code was correct for MAUI | — | — | Localization.Maui |
 | B11 | `CurrentLocale` updated before the load is known to succeed | Low–Med | High | all 3 containers + Designer wrapper |
 | B12 | Designer MAUI wrapper leaves inner dictionary pointing at a deleted temp file | Low | Medium | Localization.Designer |
 | I1–I8 | Improvements (equality semantics, robustness, perf, small cleanups) | — | — | various |
@@ -597,6 +597,8 @@ Build; scratch snippet: load a dictionary, set `Source = null` → no exception,
 
 ## B10 — MAUI splits `';'` URIs backwards (latent)
 
+> **Withdrawn (2026-07-12).** This finding was wrong: unlike WPF's `/Assembly;component/Path` form, MAUI's cross-assembly `Source` syntax is `Path.xaml;assembly=AssemblyName` — the path comes **first**, so keeping the substring before `';'` is correct. The fix below was applied and then reverted; the current code intentionally keeps the pre-`';'` part. Do not re-apply this change.
+
 **Severity: Low (latent — MAUI source URIs normally contain no `';'`). Confidence: High.**
 **File:** `Projects/Localization.Maui/LocalizableResourceDictionary.cs`, `GetTranslationAssetPath` (lines 212–217) and `GetTranslationFilePath` (lines 260–265).
 
@@ -786,6 +788,23 @@ and make `CompareTo` ordinal: `return String.CompareOrdinal(Name, other.Name);`.
 Verify: Designer still shows empty columns for locales without files, and creating/saving a translation makes it appear without restarting.
 
 ---
+
+# Implementation status (2026-07-12)
+
+All findings above have been implemented (B1–B12, I1–I8; recommended options for B2/B4/B12; I2 as "document only"). Three deliberate deviations from the fix text above, discovered during implementation:
+
+1. **B11 — implemented as save/restore, not move-after-success.** The early `_currLocale = locale` assignment doubles as the "pending locale" marker that `EndInit()` / `OnNativeValuesLoaded` use to retry the translation load after the native content arrives (registration can trigger a translation load *before* the native content is loaded; that load throws, and the retry relies on `_currLocale` already being set). Moving the assignment after a successful load would break that handshake. Instead, the previous locale is saved and **restored only in the missing-translation-file branch** — which is the branch where `CurrentLocale` used to lie. Applied to Core, WPF, MAUI, and the Designer wrapper.
+2. **B7/B3 — semaphore released on the worker thread (`ConfigureAwait(false)`), not the UI thread.** The fix text suggested `ConfigureAwait(true)` around the guarded section. That deadlocks against B3: `OnWindowClosing` blocks the UI thread on `_fileLoadSaveSemaphore.Wait()`, and a holder whose `Release()` is queued as a dispatcher continuation can then never run. The implemented version acquires/releases with `ConfigureAwait(false)` and moves `table.AcceptChanges()` to the UI-side callers (`SaveTranslationsTable(Boolean)` and `OnWindowClosing`). `ReportFailure` (I7.5) uses fire-and-forget `Dispatcher.InvokeAsync` for the same reason.
+3. **I7.1 — only the `Assembly.Load` null-check was removed** (wrapped in try/catch rethrowing `TypeLoadException` with the original exception as inner). The `Assembly.GetEntryAssembly()` null-check right below it is *not* dead — `GetEntryAssembly` legitimately returns null in some hosting scenarios — and was kept.
+
+Also done as part of the fixes: `CLAUDE.md` (manager lifecycle wording, empty-value semantics, MAUI programmatic-source limitation, `SupportedLocales` asymmetry, `LocaleInfo` equality), `Projects/Localization.Core/Readme.md`, and `Projects/Localization.Maui/Readme.md` were updated per rule 6.
+
+**Post-review updates (2026-07-12), after maintainer refactoring:**
+
+- **B10 is withdrawn** — see the note in its section. Keeping the pre-`';'` substring is the correct MAUI behavior (`Path.xaml;assembly=AssemblyName` form); the revert stands.
+- **B2 Part 2 final state:** the `Uri` constructors were deliberately restored to assign `Source`. They currently fail at runtime with MAUI's own `InvalidOperationException` ("Source can only be set from XAML") and are kept in case MAUI permits programmatic sources in the future. `LoadNative(Uri, LocalizationManager)` still throws `NotSupportedException`.
+- **B11 final shape:** all four implementations now simply assign `_currLocale` after the existence checks (no save/restore). To keep the `LoadNative(uri, manager)` registration handshake working, the `EndInit` retry in Core and WPF falls back to the manager's `CurrentLocale` when `_currLocale` was never set (the registration-time load can fail before `Source` is assigned).
+- **Failure semantics change:** the `LoadTranslation` failure branches (invalid locale / missing file) no longer apply `TranslationLoadBehavior` resets — a failed load now leaves the dictionary contents, `CurrentLocale`, and `_loadedLocale` fully unchanged in all four implementations. The Designer's `GetResourceTranslation` returns `null` for missing translations (instead of a native-content dictionary) so translation columns never display native text.
 
 # Cross-cutting notes for the implementer
 

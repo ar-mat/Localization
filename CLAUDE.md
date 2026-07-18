@@ -54,7 +54,8 @@ The MAUI library and demo require the MAUI workload installed: `dotnet workload 
 
 Every csproj imports this. It centralizes:
 
-- `_ArmatLocalizationVersion` — single source of truth for versioning (currently `2.2.1`); bump it here, not in individual csprojs. `Version`, `AssemblyVersion`, and `FileVersion` derive from it. `_NugetVersionPostfix` (currently `-beta`) is appended to form each library's `PackageVersion` and the `PackageReference` versions in the Debug/Release wiring — so assemblies are `2.2.1` while NuGet packages resolve as `2.2.1-beta`. Clear the postfix for a stable release.
+- `_ArmatLocalizationVersion` — single source of truth for versioning (currently `3.0.0`); bump it here, not in individual csprojs. `Version`, `AssemblyVersion`, and `FileVersion` derive from it. `_NugetVersionPostfix` (currently `-beta`) is appended to form each library's `PackageVersion` and the `PackageReference` versions in the Debug/Release wiring — so assemblies are `3.0.0` while NuGet packages resolve as `3.0.0-beta`. Clear the postfix for a stable release.
+- `_ReleaseNotes` points at the root `ReleaseNotes.md` on GitHub — maintain the top section there for the upcoming release and stamp the date when publishing. It's a plain variable, not `PackageReleaseNotes` directly, because this file is imported by every project including non-packable ones (Designer, Demos); each packable csproj (Core/Wpf/Maui) opts in with its own `<PackageReleaseNotes>$(_ReleaseNotes)</PackageReleaseNotes>`.
 - `_DotNetVersion` — the **actual TFM is .NET 10** (`net10.0`). WPF/Designer projects extend it to `$(_DotNetVersion)-windows`; MAUI to `$(_DotNetVersion)-android`, `-ios`, `-maccatalyst`, and (on Windows hosts) `-windows10.0.19041.0`.
 - `OutputPath = $(SolutionDir)\..\..\bin\$(Configuration)` and `AppendTargetFrameworkToOutputPath=false` — this is why builds land in the single shared `bin/<Config>/` regardless of TFM. MAUI csprojs override `OutputPath` to keep per-TFM directories (otherwise multi-TFM outputs would clobber each other). `obj/` is centralized too: `IntermediateOutputPath` goes under `bin/<Config>/obj/<Project>/`.
 - `Nullable=enable`, `ImplicitUsings=disable`, `EnforceCodeStyleInBuild=true`.
@@ -70,13 +71,13 @@ Sub-projects (Wpf, Maui, Designer, Demo apps) reference Core/Wpf via **`ProjectR
 
 Practical implications:
 - Use **Debug** for inner-loop development — F12, breakpoints, edits in Core/Wpf flow into dependent projects.
-- **Release builds resolve `armat.localization.core` / `.wpf` / `.maui` from NuGet at `$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)`** (e.g. `2.2.1-beta`). If you bump the version, the packages must be published before downstream Release builds will restore. To Release-build without publishing first, run `Pack.ps1` and add the local `bin/Release/pack/` directory as a NuGet source, or temporarily flip the conditions.
+- **Release builds resolve `armat.localization.core` / `.wpf` / `.maui` from NuGet at `$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)`** (e.g. `3.0.0-beta`). If you bump the version, the packages must be published before downstream Release builds will restore. To Release-build without publishing first, run `Pack.ps1` and add the local `bin/Release/pack/` directory as a NuGet source, or temporarily flip the conditions.
 
 ## Architecture: how localization works
 
 The runtime model is the same across Core / WPF / MAUI; only the resource container differs.
 
-**`LocalizationManager`** (Core) is a singleton-ish hub. `CreateDefaultInstance(...)` populates `LocalizationManager.Default` and **can only be called once** before anyone reads `Default`. It owns the `CurrentLocale`, fires `LocalizationChanged`, and holds a weakly-referenced `Targets` collection of `ILocalizationTarget` objects so disposed dictionaries clean up automatically.
+**`LocalizationManager`** (Core) is a singleton-ish hub. `CreateDefaultInstance(...)` populates `LocalizationManager.Default` and throws if called twice. Reading `Default` before it is called returns a placeholder manager; targets registered with the placeholder never migrate — create the default manager before constructing any localizable resources (a warning is logged otherwise). Locale changes and target registration are expected to happen on a single (UI) thread. It owns the `CurrentLocale`, fires `LocalizationChanged`, and holds a weakly-referenced `Targets` collection of `ILocalizationTarget` objects so disposed dictionaries clean up automatically.
 
 **Localizable containers** all implement `ILocalizationTarget` + `ILocalizableResource` and follow the same lifecycle: load native content from a `Source` URI, register with a `LocalizationManager`, then on `OnLocalizationChanged` reload `.tsd`/`.trd` translations.
 
@@ -96,7 +97,7 @@ Localization/
   ...
 ```
 
-`TranslationLoadBehavior` controls behavior for keys missing from a translation file: `KeepNative` (default), `ClearNative`, or `RemoveNative`.
+`TranslationLoadBehavior` controls behavior for keys missing from a successfully loaded translation file: `KeepNative` (default), `ClearNative`, or `RemoveNative`. Empty-string values in a translation file are treated the same as missing keys (the Designer persists untranslated cells as empty strings, so this is what makes partial translations fall back to native at runtime). A failed `LoadTranslation` (invalid locale or missing file) returns `false` and leaves the dictionary contents and `CurrentLocale` fully unchanged — the load behavior is not applied in that case. For absolute file `Source`s only the file name is kept — the translation resolves to `<TranslationsDir>/<locale>/<file name>`.
 
 ### MAUI translation file resolution
 
@@ -107,10 +108,13 @@ The MAUI dictionary tries two sources in order during `LoadTranslation`:
 
 When `Configuration.SupportedLocales` isn't set, `LocalizationManager.AllLocales` falls back to scanning the translations directory — that scan can't see `MauiAsset`-packaged files at runtime, so MAUI apps almost always need to set `Configuration.SupportedLocales` explicitly (see `Projects/Demo/MauiApp/App.xaml.cs`).
 
+MAUI forbids setting `ResourceDictionary.Source` from code ("Source can only be set from XAML"), so programmatic loading is unsupported on MAUI: the `Uri`-taking constructors fail at runtime with MAUI's own `InvalidOperationException` (deliberately kept in case MAUI permits programmatic sources later), `LoadNative(Uri, LocalizationManager)` throws `NotSupportedException`, and switching back to the native locale restores values from an internal snapshot captured when the XAML content first loaded. MAUI `Source` URIs use the `Path.xaml;assembly=AssemblyName` form — path first, unlike WPF's `/Assembly;component/Path` — which the translation-path helpers account for by keeping the substring before `';'`.
+
 ### Configuration notes
 
-- `Configuration` is a **mutable record struct** (`set`, not `init`) with a `SupportedLocales` property (`IEnumerable<LocaleInfo>?`). When non-null, `LocalizationManager.AllLocales` returns it directly instead of scanning the translations directory.
+- `Configuration` is a **mutable record struct** (`set`, not `init`) with a `SupportedLocales` property (`IEnumerable<LocaleInfo>?`). When non-null, `LocalizationManager.AllLocales` returns it directly instead of scanning the translations directory (as-is — the `DefaultLocale` prepend applies only to the directory-scan fallback).
 - `ILocalizableResource.Source` is `Uri?` (nullable). Implementations may return null before `LoadNative` has been called.
+- `LocaleInfo` equality is by culture `Name` only — `DisplayNameOverride` is cosmetic and doesn't participate in comparisons.
 
 ## Designer app
 

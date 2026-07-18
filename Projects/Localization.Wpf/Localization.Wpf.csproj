@@ -18,6 +18,7 @@
 		<PackageIcon>AppIcon.png</PackageIcon>
 		<PackageTags>Localization Translation MultiLingual Language Culture Wpf</PackageTags>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
+		<PackageReleaseNotes>$(_ReleaseNotes)</PackageReleaseNotes>
 
 		<PackageVersion>$(_ArmatLocalizationVersion)$(_NugetVersionPostfix)</PackageVersion>
 		<PackageProjectUrl>$(_ProjectWebpageUrl)</PackageProjectUrl>

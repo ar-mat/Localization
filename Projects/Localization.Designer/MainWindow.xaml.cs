@@ -316,7 +316,29 @@ public partial class MainWindow : Window
 
 	private void OnWindowClosing(Object sender, System.ComponentModel.CancelEventArgs e)
 	{
-		SaveTranslationsTable();
+		// save synchronously - the application may exit before a fire-and-forget
+		// background save gets a chance to finish
+		try
+		{
+			TranslationsTable table = TranslationsTable;
+
+			_fileLoadSaveSemaphore.Wait();
+			try
+			{
+				SaveTranslationsTableUnsafe(LocalizableFiles, table, true, CancellationToken.None);
+			}
+			finally
+			{
+				_fileLoadSaveSemaphore.Release();
+			}
+
+			// AcceptChanges must run on the UI thread
+			table.AcceptChanges();
+		}
+		catch (Exception ex)
+		{
+			ReportFailure(ex);
+		}
 	}
 
 	#endregion // UI command handlers
@@ -484,7 +506,7 @@ public partial class MainWindow : Window
 	}
 
 	private CancellationTokenSource? _loadTranslationsCancellationTokenSource = null;
-	private static readonly Mutex _fileLoadSaveMutex = new(false);
+	private static readonly SemaphoreSlim _fileLoadSaveSemaphore = new(1, 1);
 	private async Task LoadTranslationsTableAsync(IEnumerable<LocalizableResourceFile> selectedFiles)
 	{
 		// display loading progress indicator
@@ -524,27 +546,28 @@ public partial class MainWindow : Window
 	private static async Task<TranslationsTable?> LoadTranslationsTableAsync(IEnumerable<LocalizableResourceFile> selectedFiles,
 		IEnumerable<LocalizableResourceFile> allFiles, TranslationsTable? currentTable, CancellationToken token)
 	{
-		return await Task.Run(() =>
+		// the semaphore must be released before resuming on the UI thread -
+		// OnWindowClosing blocks the UI thread on the same semaphore, and a release
+		// scheduled as a dispatcher continuation would deadlock against it
+		await _fileLoadSaveSemaphore.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+		try
 		{
-			if (!_fileLoadSaveMutex.WaitOne())
-				return null;
-
-			try
-			{
-				return LoadTranslationsTableAsyncUnsafe(selectedFiles, allFiles, currentTable, token);
-			}
-			finally
-			{
-				_fileLoadSaveMutex.ReleaseMutex();
-			}
-		}).ConfigureAwait(true);
+			return await Task.Run(() => LoadTranslationsTableUnsafe(selectedFiles, allFiles, currentTable, token)).ConfigureAwait(false);
+		}
+		finally
+		{
+			_fileLoadSaveSemaphore.Release();
+		}
 	}
-	private static async Task<TranslationsTable?> LoadTranslationsTableAsyncUnsafe(IEnumerable<LocalizableResourceFile> selectedFiles,
+	private static TranslationsTable? LoadTranslationsTableUnsafe(IEnumerable<LocalizableResourceFile> selectedFiles,
 		IEnumerable<LocalizableResourceFile> allFiles, TranslationsTable? currentTable, CancellationToken token)
 	{
 		// check if there are any changes to apply back
+		// (called directly - the caller already holds the load/save semaphore and
+		// SemaphoreSlim is not reentrant; AcceptChanges is intentionally skipped
+		// because the current table is replaced right after this load)
 		if (currentTable != null)
-			await SaveTranslationsTableAsync(allFiles, currentTable, true, token).ConfigureAwait(false);
+			SaveTranslationsTableUnsafe(allFiles, currentTable, true, token);
 
 		if (token.IsCancellationRequested)
 			return null;
@@ -647,32 +670,40 @@ public partial class MainWindow : Window
 	}
 	private async void SaveTranslationsTable(Boolean saveChangesOnly)
 	{
-		_ = await SaveTranslationsTableAsync(LocalizableFiles, TranslationsTable, saveChangesOnly, CancellationToken.None).ConfigureAwait(true);
+		try
+		{
+			// keep a reference to the table being saved - a concurrent load may
+			// replace the TranslationsTable property before the await completes
+			TranslationsTable table = TranslationsTable;
+
+			Boolean result = await SaveTranslationsTableAsync(LocalizableFiles, table, saveChangesOnly, CancellationToken.None).ConfigureAwait(true);
+
+			// AcceptChanges must run on the UI thread (ConfigureAwait(true) above ensures we're back on it)
+			if (result)
+				table.AcceptChanges();
+		}
+		catch (Exception ex)
+		{
+			ReportFailure(ex);
+		}
 	}
 	private static async Task<Boolean> SaveTranslationsTableAsync(IEnumerable<LocalizableResourceFile> localizableFiles, TranslationsTable table, Boolean saveChangesOnly, CancellationToken token)
 	{
-		Boolean result = await Task.Run(() =>
+		// the semaphore must be released before resuming on the UI thread -
+		// OnWindowClosing blocks the UI thread on the same semaphore, and a release
+		// scheduled as a dispatcher continuation would deadlock against it;
+		// AcceptChanges is the caller's responsibility (it must run on the UI thread)
+		await _fileLoadSaveSemaphore.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+		try
 		{
-			if (!_fileLoadSaveMutex.WaitOne())
-				return false;
-
-			try
-			{
-				return SaveTranslationsTableAsyncUnsafe(localizableFiles, table, saveChangesOnly, token);
-			}
-			finally
-			{
-				_fileLoadSaveMutex.ReleaseMutex();
-			}
-		}).ConfigureAwait(true);
-
-		// AcceptChanges must run on the UI thread (ConfigureAwait(true) above ensures we're back on it)
-		if (result)
-			table.AcceptChanges();
-
-		return result;
+			return await Task.Run(() => SaveTranslationsTableUnsafe(localizableFiles, table, saveChangesOnly, token)).ConfigureAwait(false);
+		}
+		finally
+		{
+			_fileLoadSaveSemaphore.Release();
+		}
 	}
-	private static Boolean SaveTranslationsTableAsyncUnsafe(IEnumerable<LocalizableResourceFile> localizableFiles, TranslationsTable table, Boolean saveChangesOnly, CancellationToken token)
+	private static Boolean SaveTranslationsTableUnsafe(IEnumerable<LocalizableResourceFile> localizableFiles, TranslationsTable table, Boolean saveChangesOnly, CancellationToken token)
 	{
 		DataTable contentsToSave;
 
@@ -712,8 +743,15 @@ public partial class MainWindow : Window
 				if (token.IsCancellationRequested)
 					return false;
 
-				//if ((String)dataRow[column] == (String)dataRow[column, DataRowVersion.Original])
-				//    continue;
+				// a changed row carries current values for ALL locale columns, not just
+				// the edited one - skip cells whose value did not actually change
+				if (saveChangesOnly && dataRow.HasVersion(DataRowVersion.Original))
+				{
+					Object currValue = dataRow[column];
+					Object origValue = dataRow[column, DataRowVersion.Original];
+					if (Equals(currValue, origValue))
+						continue;
+				}
 
 				Guid localizableFileId = (Guid)dataRow[table.ResourceFileIdColumn.Ordinal];
 				String resourceKey = (String)dataRow[table.ResourceKeyColumn.Ordinal];
@@ -730,6 +768,12 @@ public partial class MainWindow : Window
 			{
 				LocalizableResourceFile? file = localizableFiles.FirstOrDefault(f => f != null && f.Id == transFile.Key, null);
 				if (file == null)
+					continue;
+
+				// do not create translation files for locales this file never had;
+				// adding a language goes through the explicit AddLanguage command
+				LocalizationManager? fileManager = file.LocalizationManager;
+				if (fileManager != null && !fileManager.AllLocales.Contains(locale))
 					continue;
 
 				IEnumerable<KeyValuePair<String, String>> translations = transFile.Value;
@@ -795,6 +839,14 @@ public partial class MainWindow : Window
 	}
 	private static void ReportFailure(Exception ex)
 	{
-		MessageBox.Show(ex.Message, Localization.UIMessagesSD.Instance.MessageBox_Caption_Error, MessageBoxButton.OK, MessageBoxImage.Error);
+		// may be called from background threads - marshal the message box to the UI
+		// thread; fire-and-forget to avoid deadlocking a worker against a UI thread
+		// that is blocked on the load/save semaphore
+		System.Windows.Threading.Dispatcher? dispatcher = System.Windows.Application.Current?.Dispatcher;
+		if (dispatcher == null || dispatcher.CheckAccess())
+			MessageBox.Show(ex.Message, Localization.UIMessagesSD.Instance.MessageBox_Caption_Error, MessageBoxButton.OK, MessageBoxImage.Error);
+		else
+			_ = dispatcher.InvokeAsync(() =>
+				MessageBox.Show(ex.Message, Localization.UIMessagesSD.Instance.MessageBox_Caption_Error, MessageBoxButton.OK, MessageBoxImage.Error));
 	}
 }
