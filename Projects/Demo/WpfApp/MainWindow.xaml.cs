@@ -2,6 +2,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -52,10 +53,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 		if (e.AddedItems.Count > 0)
 		{
 			LocaleInfo? selectedLocale = e.AddedItems.Cast<LocaleInfo>().FirstOrDefault();
-			if (selectedLocale != null && selectedLocale.Culture != null)
+			if (selectedLocale != null)
 			{
-				Thread.CurrentThread.CurrentCulture = selectedLocale.Culture;
-				Thread.CurrentThread.CurrentUICulture = selectedLocale.Culture;
+				// the [Native] locale has no culture - fall back to the installed UI culture
+				CultureInfo culture = selectedLocale.Culture ?? CultureInfo.InstalledUICulture;
+				Thread.CurrentThread.CurrentCulture = culture;
+				Thread.CurrentThread.CurrentUICulture = culture;
 
 				LocalizationManager.Default.ChangeLocale(selectedLocale);
 			}

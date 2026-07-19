@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Xml;
 
 namespace Armat.Localization.Maui;
@@ -54,11 +55,6 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 	// Fired by MAUI when the native XAML content is first loaded into this dictionary.
 	// Used as the post-initialization hook since EndInit() is not called in MAUI.
 	private Boolean _initialized = false;
-
-	// snapshot of the native (untranslated) contents, captured after MAUI finishes
-	// loading the XAML; used to restore native values because MAUI does not allow
-	// re-assigning ResourceDictionary.Source from code
-	private Dictionary<String, Object>? _nativeContents = null;
 	private void OnNativeValuesLoaded(Object? sender, ResourcesChangedEventArgs e)
 	{
 		// ignore the event while the Source is not set
@@ -73,9 +69,6 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 
 		// unsubscribe after first call - we only need initialization once
 		((IResourceDictionary)this).ValuesChanged -= OnNativeValuesLoaded;
-
-		// capture the native contents before any translation is applied - see LoadNative
-		_nativeContents = new Dictionary<String, Object>(this, StringComparer.Ordinal);
 
 		// in case there's a non-native locale selected in Localization Manager, OnLocalizationChanged will be triggered
 		// upon _locMgr.Targets.Add() and LoadTranslation will be called with the appropriate Locale
@@ -360,20 +353,23 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 
 		return true;
 	}
+	// MAUI keeps the native (untranslated) contents loaded from Source in an internal
+	// "merged instance" ResourceDictionary. Translations are applied as overrides in the
+	// outer (this) dictionary, so the merged instance stays pristine - which makes it the
+	// source of truth for restoring native values, since MAUI does not allow re-assigning
+	// Source from code. The outer dictionary's own enumerator only yields those overrides
+	// (the native values live in the merged instance), so a plain snapshot of 'this' would
+	// be empty; the merged instance must be read directly.
+	private static readonly FieldInfo? _mergedInstanceField =
+		typeof(ResourceDictionary).GetField("_mergedInstance", BindingFlags.Instance | BindingFlags.NonPublic);
 	public void LoadNative()
 	{
-		// MAUI does not allow re-assigning ResourceDictionary.Source from code
-		// ("Source can only be set from XAML"), so native values are restored
-		// from the snapshot captured when the dictionary was first loaded
-		if (_nativeContents != null)
+		// restore native values from MAUI's pristine merged instance, overwriting any
+		// translation overrides currently held in this (outer) dictionary
+		if (_mergedInstanceField?.GetValue(this) is ResourceDictionary nativeContents)
 		{
-			foreach (KeyValuePair<String, Object> pair in _nativeContents)
+			foreach (KeyValuePair<String, Object> pair in nativeContents)
 				this[pair.Key] = pair.Value;
-
-			// remove keys that are not part of the native contents
-			String[] extraKeys = Keys.Where(key => !_nativeContents.ContainsKey(key)).ToArray();
-			foreach (String key in extraKeys)
-				Remove(key);
 		}
 
 		// reset the loaded locale - the dictionary is back to its native contents

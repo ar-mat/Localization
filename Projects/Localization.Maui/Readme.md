@@ -66,7 +66,7 @@ Unlike WPF, **MAUI does not call `ISupportInitialize.EndInit()` on `ResourceDict
 
 - `GetValueOrDefault<T>(String key, T defaultValue)` — resource lookup that returns the default on missing keys or cast failures.
 - `CanLoadNative(Uri sourceUri)` — checks the file's root element name and confirms `xmlns="http://schemas.microsoft.com/dotnet/2021/maui"` before accepting it as a MAUI native dictionary.
-- `LoadNative()` — restores the native (untranslated) values from a snapshot captured when the XAML content was first loaded (MAUI does not allow re-assigning `Source` from code).
+- `LoadNative()` — restores the native (untranslated) values from MAUI's internal merged instance (the pristine dictionary MAUI creates when loading from `Source`), overwriting any translation overrides; MAUI does not allow re-assigning `Source` from code.
 - `LoadNative(Uri sourceUri, LocalizationManager localizationManager)` — **throws `NotSupportedException`** on MAUI; load dictionaries from XAML instead.
 - `GetTranslationAssetPath(LocaleInfo locale)` — composes the relative asset path used by `FileSystem.OpenAppPackageFileAsync` (forward-slash, `Localization/<locale>/<file>.trd`).
 - `GetTranslationFilePath(LocaleInfo locale)` — composes the absolute file system path used as the Windows fall-back.

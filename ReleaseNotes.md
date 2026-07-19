@@ -42,7 +42,7 @@ Changed:
 
 Fixed:
 
-- Switching back to the native locale now restores the original values from a snapshot captured when the XAML content was first loaded; previously it was a silent no-op that left the translated values in place (MAUI does not allow re-assigning `ResourceDictionary.Source` from code).
+- Switching back to the native locale now restores the original values by reading MAUI's internal merged instance (the pristine native dictionary MAUI keeps when loading from `Source`); previously it was a silent no-op that left the translated values in place (MAUI does not allow re-assigning `ResourceDictionary.Source` from code).
 - `LoadNative(Uri, LocalizationManager)` throws a descriptive `NotSupportedException` instead of failing with `InvalidCastException`. The `Uri`-taking constructors are kept but currently fail at runtime with MAUI's own "Source can only be set from XAML" exception.
 - Failures while probing app-package translation assets are logged; previously they were swallowed silently.
 - Empty keys and empty values in translation files are skipped, matching Core semantics.

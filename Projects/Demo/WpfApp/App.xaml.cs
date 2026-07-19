@@ -10,7 +10,9 @@ public partial class App : Application
 {
 	private void OnStartup(Object sender, StartupEventArgs e)
 	{
-		Configuration config = Configuration.Default with { DefaultLocale = new LocaleInfo("en") };
+		// start in the native (untranslated) locale - [Native] is also offered in the language
+		// selector because LocalizationManager.AllLocales prepends the default locale when it's Invalid
+		Configuration config = Configuration.Default with { DefaultLocale = LocaleInfo.Invalid };
 
 		LocalizationManager.CreateDefaultInstance(config);
 	}

@@ -12,8 +12,10 @@ public partial class App : Application
 	{
 		InitializeComponent();
 
-		Configuration config = Configuration.Default with { DefaultLocale = new LocaleInfo("en") };
-		config.SupportedLocales = new[] { new LocaleInfo("en"), new LocaleInfo("hy"), new LocaleInfo("ru") };
+		// start in the native (untranslated) locale by default, and offer [Native] alongside
+		// the translated locales in the language selector
+		Configuration config = Configuration.Default with { DefaultLocale = LocaleInfo.Invalid };
+		config.SupportedLocales = new[] { LocaleInfo.Invalid, new LocaleInfo("en"), new LocaleInfo("hy"), new LocaleInfo("ru") };
 
 		LocalizationManager.CreateDefaultInstance(config);
 	}
