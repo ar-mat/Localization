@@ -46,6 +46,7 @@ Fixed:
 - `LoadNative(Uri, LocalizationManager)` throws a descriptive `NotSupportedException` instead of failing with `InvalidCastException`. The `Uri`-taking constructors are kept but currently fail at runtime with MAUI's own "Source can only be set from XAML" exception.
 - Failures while probing app-package translation assets are logged; previously they were swallowed silently.
 - Empty keys and empty values in translation files are skipped, matching Core semantics.
+- Removed the LocalizableResourceDictionary constructors with arguments `Uri` source that MAUI does not support.
 
 ### Localization Designer
 

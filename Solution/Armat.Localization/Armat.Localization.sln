@@ -29,6 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepositoryRootDir", "Reposi
 		..\..\CONTRIBUTING.md = ..\..\CONTRIBUTING.md
 		..\..\LICENSE.txt = ..\..\LICENSE.txt
 		..\..\README.md = ..\..\README.md
+		..\..\ReleaseNotes.md = ..\..\ReleaseNotes.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Localization.Maui", "..\..\Projects\Localization.Maui\Localization.Maui.csproj", "{D31347F3-0ADC-4DB2-A840-B5E144481690}"

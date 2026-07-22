@@ -28,26 +28,10 @@ public class LocalizableResourceDictionary : ResourceDictionary, ILocalizationTa
 		// which is the reliable post-initialization hook for ResourceDictionary subclasses.
 		((IResourceDictionary)this).ValuesChanged += OnNativeValuesLoaded;
 	}
-	public LocalizableResourceDictionary(String sourceUri)
-		: this(new Uri(sourceUri, UriKind.RelativeOrAbsolute), LocalizationManager.Default)
-	{
-	}
-	public LocalizableResourceDictionary(String sourceUri, LocalizationManager locManager)
-		: this(new Uri(sourceUri, UriKind.RelativeOrAbsolute), locManager)
-	{
-	}
-	public LocalizableResourceDictionary(Uri source)
-		: this(source, LocalizationManager.Default)
-	{
-	}
-	public LocalizableResourceDictionary(Uri source, LocalizationManager locManager)
-		: this()
-	{
-		// Although MAUI's ResourceDictionary.Source setter throws "Source can only be set from
-		// XAML", making URI-based construction impossible on this platform,
-		// the constructor is kept in case it's used in another way
-		Source = source;
 
+	public LocalizableResourceDictionary(LocalizationManager locManager)
+	: this()
+	{
 		// register string dictionary in localization manager to receive further localization change events
 		LocalizationManager = locManager;
 	}
